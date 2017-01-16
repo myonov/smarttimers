@@ -4,6 +4,12 @@ import './App.css'
 
 const ID_LENGTH = 10;
 
+const CHOICES = {
+    TIMER: 'timer',
+    STOPWATCH: 'stopwatch',
+    REPEAT: 'repeat',
+};
+
 function generateId(length) {
     let result = '';
     for (let i = 0; i < length; ++i) {
@@ -12,38 +18,79 @@ function generateId(length) {
     return result;
 }
 
-function computeList(taskList, task) {
-    return taskList.concat(task);
+function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
 }
 
-function computeRearrangedTakList(taskList, index1, index2) {
-    let computed = taskList.slice();
-    computed[index1] = taskList[index2];
-    computed[index2] = taskList[index1];
-    return computed;
+function findTaskList(taskList, node) {
+    if (node == null) {
+        return taskList;
+    }
+
+    for (let i = 0; i < taskList.length; ++i) {
+        let task = taskList[i];
+        if (task.type === CHOICES.REPEAT) {
+            if (task.id === node.id) {
+                return task.taskList;
+            } else {
+                let result = findTaskList(task.taskList, node);
+                if (result.length !== undefined) {
+                    return result;
+                }
+            }
+        }
+    }
 }
 
-const CHOICES = {
-    TIMER: 'timer',
-    STOPWATCH: 'stopwatch',
-    REPEAT: 'repeat',
-};
+function insertIntoTaskList(startList, node, task) {
+    let taskList = findTaskList(startList, node);
+    taskList.push(task);
+}
+
+function swapMove(taskList, index1, index2) {
+    let buf = taskList[index1];
+    taskList[index1] = taskList[index2];
+    taskList[index2] = buf;
+}
 
 const DEFAULT_MODAL_SELECTED_OPTION = CHOICES.TIMER;
 
 function Navigation(props) {
     let moveUp = null;
     if (props.canMoveUp) {
-        moveUp = <a onClick={props.moveUp}>Up</a>;
+        moveUp = <a onClick={props.moveTaskUp}>Up</a>;
     }
     let moveDown = null;
     if (props.canMoveDown) {
-        moveDown = <a onClick={props.moveDown}>Down</a>;
+        moveDown = <a onClick={props.moveTaskDown}>Down</a>;
     }
     return <div className="navigation">
         {moveUp}
         {moveDown}
     </div>
+}
+
+function TaskList(props) {
+    let containerClassName = props.containerClassName || '';
+    let taskNode = props.taskNode || null;
+
+    return (
+        <div className={containerClassName}>
+            <div className="task-list">
+                {props.taskList.map(
+                    (task, index) => <TaskComponent
+                        task={task}
+                        key={task.id}
+                        canMoveUp={index > 0}
+                        canMoveDown={index < props.taskList.length - 1}
+                        moveTaskUp={() => props.moveTaskUp(props.taskNode, index)}
+                        moveTaskDown={() => props.moveTaskDown(props.taskNode, index)}/>)}
+            </div>
+            <div>
+                <a onClick={() => props.openModal(taskNode)}>Add task</a>
+            </div>
+        </div>
+    );
 }
 
 function TimerComponent(props) {
@@ -72,6 +119,8 @@ function RepeatComponent(props) {
         <h3>{task.title}</h3>
         <h4>Repeat: {task.repeat}</h4>
         {props.navigation}
+
+        <TaskList />
     </div>
 }
 
@@ -80,8 +129,8 @@ function TaskComponent(props) {
     let navigation = <Navigation
         canMoveUp={props.canMoveUp}
         canMoveDown={props.canMoveDown}
-        moveUp={props.moveUp}
-        moveDown={props.moveDown}/>;
+        moveTaskUp={props.moveTaskUp}
+        moveTaskDown={props.moveTaskDown}/>;
 
     if (task.type === CHOICES.TIMER) {
         return <TimerComponent {...props} navigation={navigation}/>
@@ -128,6 +177,7 @@ class App extends React.Component {
             type: CHOICES.REPEAT,
             title: this.state.modalTaskName,
             repeat: this.state.modalRepeatInput,
+            taskList: [],
         };
     }
 
@@ -143,7 +193,8 @@ class App extends React.Component {
 
     addTask() {
         let taskObj = this.createTask();
-        let modifiedTaskList = computeList(this.state.taskList, taskObj);
+        let modifiedTaskList = deepCopy(this.state.taskList);
+        insertIntoTaskList(modifiedTaskList, this.state.addPlaceNode, taskObj);
 
         this.setState({
             taskList: modifiedTaskList,
@@ -151,12 +202,16 @@ class App extends React.Component {
         this.closeModal();
     }
 
-    openModal() {
-        this.setState({modalIsOpen: true});
+    openModal(taskNode) {
+        this.setState({
+            addPlaceNode: taskNode,
+            modalIsOpen: true,
+        });
     }
 
     closeModal() {
         this.setState({
+            addPlaceNode: null,
             modalTaskName: '',
             modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
             modalTimerInput: '',
@@ -189,33 +244,34 @@ class App extends React.Component {
             value={this.state.modalRepeatInput}/>
     }
 
-    moveTaskUp(index) {
-        let newTaskList = computeRearrangedTakList(this.state.taskList, index - 1, index);
-        this.setState({taskList: newTaskList});
+    moveTaskUp(taskNode, index) {
+        let modifiedTaskList = deepCopy(this.state.taskList);
+        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        swapMove(listToChange, index - 1, index);
+
+        this.setState({taskList: modifiedTaskList});
     }
 
-    moveTaskDown(index) {
-        let newTaskList = computeRearrangedTakList(this.state.taskList, index, index + 1);
-        this.setState({taskList: newTaskList});
+    moveTaskDown(taskNode, index) {
+        let modifiedTaskList = deepCopy(this.state.taskList);
+        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        swapMove(listToChange, index, index + 1);
+
+        this.setState({taskList: modifiedTaskList});
     }
 
     render() {
         return (
             <div>
                 <h3>Task List</h3>
-                <div className="container">
-                    {this.state.taskList.map(
-                        (task, index) => <TaskComponent
-                            task={task}
-                            key={task.id}
-                            canMoveUp={index !== 0}
-                            canMoveDown={index !== this.state.taskList.length - 1}
-                            moveUp={this.moveTaskUp.bind(this, index)}
-                            moveDown={this.moveTaskDown.bind(this, index)}/>)}
-                </div>
-                <div>
-                    <a onClick={this.openModal.bind(this)}>Add task</a>
-                </div>
+                <TaskList
+                    containerClassName="container"
+                    taskList={this.state.taskList}
+                    openModal={this.openModal.bind(this)}
+                    moveTaskUp={this.moveTaskUp.bind(this)}
+                    moveTaskDown={this.moveTaskDown.bind(this)}
+                    taskNode={null}
+                />
 
                 <Modal
                     isOpen={this.state.modalIsOpen}
@@ -235,7 +291,7 @@ class App extends React.Component {
                             <option value={CHOICES.REPEAT}>Repeat</option>
                         </select>
                         {this.renderModalSelectedOptionProperties()}
-                        <button onClick={this.addTask.bind(this)}>Add</button>
+                        <button onClick={this.addTask.bind(this, null)}>Add</button>
                         <button onClick={this.closeModal.bind(this)}>Cancel</button>
                     </div>
                 </Modal>

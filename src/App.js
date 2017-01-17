@@ -34,7 +34,7 @@ function findTaskList(taskList, node) {
                 return task.taskList;
             } else {
                 let result = findTaskList(task.taskList, node);
-                if (result.length !== undefined) {
+                if (result !== undefined) {
                     return result;
                 }
             }
@@ -58,11 +58,11 @@ const DEFAULT_MODAL_SELECTED_OPTION = CHOICES.TIMER;
 function Navigation(props) {
     let moveUp = null;
     if (props.canMoveUp) {
-        moveUp = <a onClick={props.moveTaskUp}>Up</a>;
+        moveUp = <a onClick={() => props.moveTaskUp(props.taskNode, props.index)}>Up</a>;
     }
     let moveDown = null;
     if (props.canMoveDown) {
-        moveDown = <a onClick={props.moveTaskDown}>Down</a>;
+        moveDown = <a onClick={() => props.moveTaskDown(props.taskNode, props.index)}>Down</a>;
     }
     return <div className="navigation">
         {moveUp}
@@ -72,19 +72,22 @@ function Navigation(props) {
 
 function TaskList(props) {
     let containerClassName = props.containerClassName || '';
-    let taskNode = props.taskNode || null;
+    let taskNode = props.taskNode;
 
     return (
         <div className={containerClassName}>
             <div className="task-list">
                 {props.taskList.map(
                     (task, index) => <TaskComponent
+                        index={index}
                         task={task}
+                        taskNode={taskNode}
                         key={task.id}
                         canMoveUp={index > 0}
                         canMoveDown={index < props.taskList.length - 1}
-                        moveTaskUp={() => props.moveTaskUp(props.taskNode, index)}
-                        moveTaskDown={() => props.moveTaskDown(props.taskNode, index)}/>)}
+                        moveTaskUp={props.moveTaskUp}
+                        moveTaskDown={props.moveTaskDown}
+                        openModal={props.openModal}/>)}
             </div>
             <div>
                 <a onClick={() => props.openModal(taskNode)}>Add task</a>
@@ -120,7 +123,12 @@ function RepeatComponent(props) {
         <h4>Repeat: {task.repeat}</h4>
         {props.navigation}
 
-        <TaskList />
+        <TaskList
+            taskList={task.taskList}
+            openModal={props.openModal}
+            moveTaskUp={props.moveTaskUp}
+            moveTaskDown={props.moveTaskDown}
+            taskNode={task}/>
     </div>
 }
 
@@ -130,7 +138,9 @@ function TaskComponent(props) {
         canMoveUp={props.canMoveUp}
         canMoveDown={props.canMoveDown}
         moveTaskUp={props.moveTaskUp}
-        moveTaskDown={props.moveTaskDown}/>;
+        moveTaskDown={props.moveTaskDown}
+        index={props.index}
+        taskNode={props.taskNode}/>;
 
     if (task.type === CHOICES.TIMER) {
         return <TimerComponent {...props} navigation={navigation}/>
@@ -248,7 +258,6 @@ class App extends React.Component {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskNode);
         swapMove(listToChange, index - 1, index);
-
         this.setState({taskList: modifiedTaskList});
     }
 
@@ -256,7 +265,6 @@ class App extends React.Component {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskNode);
         swapMove(listToChange, index, index + 1);
-
         this.setState({taskList: modifiedTaskList});
     }
 
@@ -270,8 +278,7 @@ class App extends React.Component {
                     openModal={this.openModal.bind(this)}
                     moveTaskUp={this.moveTaskUp.bind(this)}
                     moveTaskDown={this.moveTaskDown.bind(this)}
-                    taskNode={null}
-                />
+                    taskNode={null}/>
 
                 <Modal
                     isOpen={this.state.modalIsOpen}

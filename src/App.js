@@ -53,6 +53,31 @@ function swapMove(taskList, index1, index2) {
     taskList[index2] = buf;
 }
 
+function encodeArray(arr) {
+    return encodeURIComponent(JSON.stringify(arr))
+}
+
+function decodeToArray(data) {
+    return JSON.parse(decodeURIComponent(data));
+}
+
+function exportUrl(arr) {
+    let encoded = encodeArray(arr);
+    return window.location.href + '?export=' + encoded;
+}
+
+function queryStringToObject(query) {
+    let result = {};
+    for (let keyValuePair of query.split('&')) {
+        if (!keyValuePair) {
+            continue;
+        }
+        let [key, value] = keyValuePair.split('=');
+        result[key] = value;
+    }
+    return result;
+}
+
 const DEFAULT_MODAL_SELECTED_OPTION = CHOICES.TIMER;
 
 function Navigation(props) {
@@ -87,6 +112,7 @@ function TaskList(props) {
                         canMoveDown={index < props.taskList.length - 1}
                         moveTaskUp={props.moveTaskUp}
                         moveTaskDown={props.moveTaskDown}
+                        removeTask={props.removeTask}
                         openModal={props.openModal}/>)}
             </div>
             <div>
@@ -102,6 +128,7 @@ function TimerComponent(props) {
     return <div className="component timer-component">
         <h3>{task.title}</h3>
         <h4>Duration: {task.timer}</h4>
+        {props.remove}
         {props.navigation}
     </div>
 }
@@ -111,6 +138,7 @@ function StopwatchComponent(props) {
 
     return <div className="component stopwatch-component">
         <h3>{task.title}</h3>
+        {props.remove}
         {props.navigation}
     </div>
 }
@@ -121,6 +149,7 @@ function RepeatComponent(props) {
     return <div className="component repeat-component">
         <h3>{task.title}</h3>
         <h4>Repeat: {task.repeat}</h4>
+        {props.remove}
         {props.navigation}
 
         <TaskList
@@ -128,8 +157,17 @@ function RepeatComponent(props) {
             openModal={props.openModal}
             moveTaskUp={props.moveTaskUp}
             moveTaskDown={props.moveTaskDown}
+            removeTask={props.removeTask}
             taskNode={task}/>
     </div>
+}
+
+function Remove(props) {
+    return <a onClick={(e) => {
+        e.preventDefault();
+        props.removeTask(props.taskNode, props.index)}}>
+        Remove
+    </a>
 }
 
 function TaskComponent(props) {
@@ -141,21 +179,38 @@ function TaskComponent(props) {
         moveTaskDown={props.moveTaskDown}
         index={props.index}
         taskNode={props.taskNode}/>;
+    let remove = <Remove index={props.index}
+                         taskNode={props.taskNode}
+                         removeTask={props.removeTask}/>;
 
     if (task.type === CHOICES.TIMER) {
-        return <TimerComponent {...props} navigation={navigation}/>
+        return <TimerComponent {...props} navigation={navigation} remove={remove}/>
     }
     if (task.type === CHOICES.STOPWATCH) {
-        return <StopwatchComponent {...props} navigation={navigation}/>
+        return <StopwatchComponent {...props} navigation={navigation} remove={remove}/>
     }
-    return <RepeatComponent {...props} navigation={navigation}/>
+    return <RepeatComponent {...props} navigation={navigation} remove={remove}/>
 }
 
 class App extends React.Component {
     constructor() {
         super();
+
+        let queryParams = queryStringToObject(window.location.search.substr(1));
+
+        let initialTaskList = [];
+        if (queryParams['export']) {
+            try {
+                initialTaskList = decodeToArray(queryParams['export']);
+            } catch (_) {
+                initialTaskList = [];
+            }
+        }
+        let initialExport = exportUrl(initialTaskList);
+
         this.state = {
-            taskList: [],
+            taskList: initialTaskList,
+            exportUrl: initialExport,
             modalIsOpen: false,
             modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
             modalTaskName: '',
@@ -201,14 +256,19 @@ class App extends React.Component {
         return this.createRepeatTask();
     }
 
+    changeTaskList(newTaskList) {
+        let exported = exportUrl(newTaskList);
+        this.setState({
+            taskList: newTaskList,
+            exportUrl: exported,
+        });
+    }
+
     addTask() {
         let taskObj = this.createTask();
         let modifiedTaskList = deepCopy(this.state.taskList);
         insertIntoTaskList(modifiedTaskList, this.state.addPlaceNode, taskObj);
-
-        this.setState({
-            taskList: modifiedTaskList,
-        });
+        this.changeTaskList(modifiedTaskList);
         this.closeModal();
     }
 
@@ -258,27 +318,35 @@ class App extends React.Component {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskNode);
         swapMove(listToChange, index - 1, index);
-        this.setState({taskList: modifiedTaskList});
+        this.changeTaskList(modifiedTaskList);
     }
 
     moveTaskDown(taskNode, index) {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskNode);
         swapMove(listToChange, index, index + 1);
-        this.setState({taskList: modifiedTaskList});
+        this.changeTaskList(modifiedTaskList);
+    }
+
+    removeTask(taskNode, index) {
+        let modifiedTaskList = deepCopy(this.state.taskList);
+        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        listToChange.splice(index, 1);
+        this.changeTaskList(modifiedTaskList);
     }
 
     render() {
         return (
-            <div>
+            <div className="container">
                 <h3>Task List</h3>
                 <TaskList
-                    containerClassName="container"
+                    containerClassName="main-tasklist"
                     taskList={this.state.taskList}
                     openModal={this.openModal.bind(this)}
                     moveTaskUp={this.moveTaskUp.bind(this)}
                     moveTaskDown={this.moveTaskDown.bind(this)}
-                    taskNode={null}/>
+                    taskNode={null}
+                    removeTask={this.removeTask.bind(this)}/>
 
                 <Modal
                     isOpen={this.state.modalIsOpen}
@@ -302,6 +370,10 @@ class App extends React.Component {
                         <button onClick={this.closeModal.bind(this)}>Cancel</button>
                     </div>
                 </Modal>
+
+                <div className="export">
+                    <textarea value={this.state.exportUrl} cols="80" rows="6" readOnly="readOnly"/>
+                </div>
             </div>
         );
     }

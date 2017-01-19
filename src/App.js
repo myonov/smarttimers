@@ -42,6 +42,14 @@ function findTaskList(taskList, node) {
     }
 }
 
+function findTaskIndexById(taskList, id) {
+    for (let i = 0; i < taskList.length; ++i) {
+        if (taskList[i].id === id) {
+            return i;
+        }
+    }
+}
+
 function insertIntoTaskList(startList, node, task) {
     let taskList = findTaskList(startList, node);
     taskList.push(task);
@@ -61,43 +69,36 @@ function decodeToArray(data) {
     return JSON.parse(decodeURIComponent(data));
 }
 
-function exportUrl(arr) {
-    let encoded = encodeArray(arr);
-    return window.location.href + '?export=' + encoded;
-}
-
-function queryStringToObject(query) {
-    let result = {};
-    for (let keyValuePair of query.split('&')) {
-        if (!keyValuePair) {
-            continue;
-        }
-        let [key, value] = keyValuePair.split('=');
-        result[key] = value;
-    }
-    return result;
-}
-
 const DEFAULT_MODAL_SELECTED_OPTION = CHOICES.TIMER;
 
-function Navigation(props) {
+function ActionList(props) {
     let moveUp = null;
     if (props.canMoveUp) {
-        moveUp = <a onClick={() => props.moveTaskUp(props.taskNode, props.index)}>Up</a>;
+        moveUp = <a onClick={() => props.moveTaskUp(props.taskListNode, props.index)}>Up</a>;
     }
     let moveDown = null;
     if (props.canMoveDown) {
-        moveDown = <a onClick={() => props.moveTaskDown(props.taskNode, props.index)}>Down</a>;
+        moveDown = <a onClick={() => props.moveTaskDown(props.taskListNode, props.index)}>Down</a>;
     }
-    return <div className="navigation">
-        {moveUp}
-        {moveDown}
+    return <div className="actionList">
+        <div className="navigation">
+            {moveUp}
+            {moveDown}
+        </div>
+        <div>
+            <a onClick={() => props.removeTask(props.taskListNode, props.index)}>
+                Remove
+            </a>
+            <a onClick={() => props.openEditModal(props.taskListNode, props.index)}>
+                Edit
+            </a>
+        </div>
     </div>
 }
 
 function TaskList(props) {
     let containerClassName = props.containerClassName || '';
-    let taskNode = props.taskNode;
+    let taskListNode = props.taskListNode;
 
     return (
         <div className={containerClassName}>
@@ -106,17 +107,18 @@ function TaskList(props) {
                     (task, index) => <TaskComponent
                         index={index}
                         task={task}
-                        taskNode={taskNode}
+                        taskListNode={taskListNode}
                         key={task.id}
                         canMoveUp={index > 0}
                         canMoveDown={index < props.taskList.length - 1}
                         moveTaskUp={props.moveTaskUp}
                         moveTaskDown={props.moveTaskDown}
                         removeTask={props.removeTask}
+                        openEditModal={props.openEditModal}
                         openModal={props.openModal}/>)}
             </div>
             <div>
-                <a onClick={() => props.openModal(taskNode)}>Add task</a>
+                <a onClick={() => props.openModal(taskListNode)}>Add task</a>
             </div>
         </div>
     );
@@ -128,8 +130,7 @@ function TimerComponent(props) {
     return <div className="component timer-component">
         <h3>{task.title}</h3>
         <h4>Duration: {task.timer}</h4>
-        {props.remove}
-        {props.navigation}
+        {props.actionList}
     </div>
 }
 
@@ -138,8 +139,7 @@ function StopwatchComponent(props) {
 
     return <div className="component stopwatch-component">
         <h3>{task.title}</h3>
-        {props.remove}
-        {props.navigation}
+        {props.actionList}
     </div>
 }
 
@@ -149,8 +149,7 @@ function RepeatComponent(props) {
     return <div className="component repeat-component">
         <h3>{task.title}</h3>
         <h4>Repeat: {task.repeat}</h4>
-        {props.remove}
-        {props.navigation}
+        {props.actionList}
 
         <TaskList
             taskList={task.taskList}
@@ -158,60 +157,53 @@ function RepeatComponent(props) {
             moveTaskUp={props.moveTaskUp}
             moveTaskDown={props.moveTaskDown}
             removeTask={props.removeTask}
-            taskNode={task}/>
+            openEditModal={props.openEditModal}
+            taskListNode={task}/>
     </div>
-}
-
-function Remove(props) {
-    return <a onClick={(e) => {
-        e.preventDefault();
-        props.removeTask(props.taskNode, props.index)}}>
-        Remove
-    </a>
 }
 
 function TaskComponent(props) {
     let task = props.task;
-    let navigation = <Navigation
+    let actionList = <ActionList
         canMoveUp={props.canMoveUp}
         canMoveDown={props.canMoveDown}
         moveTaskUp={props.moveTaskUp}
         moveTaskDown={props.moveTaskDown}
         index={props.index}
-        taskNode={props.taskNode}/>;
-    let remove = <Remove index={props.index}
-                         taskNode={props.taskNode}
-                         removeTask={props.removeTask}/>;
+        taskListNode={props.taskListNode}
+        removeTask={props.removeTask}
+        openEditModal={props.openEditModal}/>;
 
     if (task.type === CHOICES.TIMER) {
-        return <TimerComponent {...props} navigation={navigation} remove={remove}/>
+        return <TimerComponent task={task} actionList={actionList}/>
     }
     if (task.type === CHOICES.STOPWATCH) {
-        return <StopwatchComponent {...props} navigation={navigation} remove={remove}/>
+        return <StopwatchComponent task={task} actionList={actionList}/>
     }
-    return <RepeatComponent {...props} navigation={navigation} remove={remove}/>
+    return <RepeatComponent {...props} actionList={actionList}/>
 }
 
 class App extends React.Component {
     constructor() {
         super();
 
-        let queryParams = queryStringToObject(window.location.search.substr(1));
+        let locationHash = window.location.hash.substr(1);
 
         let initialTaskList = [];
-        if (queryParams['export']) {
+        if (locationHash.length > 0) {
             try {
-                initialTaskList = decodeToArray(queryParams['export']);
+                initialTaskList = decodeToArray(locationHash);
             } catch (_) {
                 initialTaskList = [];
             }
         }
-        let initialExport = exportUrl(initialTaskList);
+        let initialExport = encodeArray(initialTaskList);
 
         this.state = {
             taskList: initialTaskList,
             exportUrl: initialExport,
             modalIsOpen: false,
+            editedTaskId: null,
             modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
             modalTaskName: '',
             modalTimerInput: '',
@@ -257,11 +249,11 @@ class App extends React.Component {
     }
 
     changeTaskList(newTaskList) {
-        let exported = exportUrl(newTaskList);
+        let exported = encodeArray(newTaskList);
         this.setState({
             taskList: newTaskList,
             exportUrl: exported,
-        });
+        }, () => window.location.hash=exported);
     }
 
     addTask() {
@@ -269,12 +261,31 @@ class App extends React.Component {
         let modifiedTaskList = deepCopy(this.state.taskList);
         insertIntoTaskList(modifiedTaskList, this.state.addPlaceNode, taskObj);
         this.changeTaskList(modifiedTaskList);
+    }
+
+    editTask() {
+        let modifiedTaskList = deepCopy(this.state.taskList);
+        let listToChange = findTaskList(modifiedTaskList, this.state.addPlaceNode);
+        let taskIndex = findTaskIndexById(listToChange, this.state.editedTaskId);
+        let task = this.createTask();
+
+        task.id = this.state.editedTaskId;
+        listToChange[taskIndex] = task;
+        this.changeTaskList(modifiedTaskList);
+    }
+
+    addOrEditTask() {
+        if (this.state.editedTaskId === null) {
+            this.addTask();
+        } else {
+            this.editTask();
+        }
         this.closeModal();
     }
 
-    openModal(taskNode) {
+    openModal(taskListNode) {
         this.setState({
-            addPlaceNode: taskNode,
+            addPlaceNode: taskListNode,
             modalIsOpen: true,
         });
     }
@@ -286,7 +297,8 @@ class App extends React.Component {
             modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
             modalTimerInput: '',
             modalRepeatInput: '',
-            modalIsOpen: false
+            modalIsOpen: false,
+            editedTaskId: null,
         });
     }
 
@@ -314,25 +326,50 @@ class App extends React.Component {
             value={this.state.modalRepeatInput}/>
     }
 
-    moveTaskUp(taskNode, index) {
+    moveTaskUp(taskListNode, index) {
         let modifiedTaskList = deepCopy(this.state.taskList);
-        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        let listToChange = findTaskList(modifiedTaskList, taskListNode);
         swapMove(listToChange, index - 1, index);
         this.changeTaskList(modifiedTaskList);
     }
 
-    moveTaskDown(taskNode, index) {
+    moveTaskDown(taskListNode, index) {
         let modifiedTaskList = deepCopy(this.state.taskList);
-        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        let listToChange = findTaskList(modifiedTaskList, taskListNode);
         swapMove(listToChange, index, index + 1);
         this.changeTaskList(modifiedTaskList);
     }
 
-    removeTask(taskNode, index) {
+    removeTask(taskListNode, index) {
         let modifiedTaskList = deepCopy(this.state.taskList);
-        let listToChange = findTaskList(modifiedTaskList, taskNode);
+        let listToChange = findTaskList(modifiedTaskList, taskListNode);
         listToChange.splice(index, 1);
         this.changeTaskList(modifiedTaskList);
+    }
+
+    openEditModal(taskListNode, index) {
+        let task;
+        if (taskListNode === null) {
+            task = this.state.taskList[index];
+        } else {
+            task = taskListNode.taskList[index];
+        }
+        console.log(task);
+
+        this.setState({
+            addPlaceNode: taskListNode,
+            modalTaskName: task.title,
+            modalSelectedOption: task.type,
+            modalTimerInput: task.type === CHOICES.TIMER ? task.timer : '',
+            modalRepeatInput: task.type === CHOICES.REPEAT ? task.repeat : '',
+            editedTaskId: task.id,
+        });
+
+        this.openModal(taskListNode);
+    }
+
+    isEditMode() {
+        return this.state.editedTaskId !== null;
     }
 
     render() {
@@ -345,35 +382,33 @@ class App extends React.Component {
                     openModal={this.openModal.bind(this)}
                     moveTaskUp={this.moveTaskUp.bind(this)}
                     moveTaskDown={this.moveTaskDown.bind(this)}
-                    taskNode={null}
-                    removeTask={this.removeTask.bind(this)}/>
+                    taskListNode={null}
+                    removeTask={this.removeTask.bind(this)}
+                    openEditModal={this.openEditModal.bind(this)}/>
 
                 <Modal
                     isOpen={this.state.modalIsOpen}
                     onAfterOpen={this.modalAfterOpen.bind(this)}
                     onRequestClose={this.closeModal.bind(this)}
-                    contentLabel='Add task'>
+                    contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}>
                     <div>
                         <input
                             onChange={this.modalInputChange.bind(this, 'modalTaskName')}
-                            ref={input => this.input = input}/>
+                            ref={input => this.input = input} value={this.state.modalTaskName}/>
                         <select
                             value={this.state.modalSelectedOption}
-                            onChange={this.modalInputChange.bind(this, 'modalSelectedOption')}>
+                            onChange={this.modalInputChange.bind(this, 'modalSelectedOption')}
+                            disabled={this.isEditMode()}>
 
                             <option value={CHOICES.TIMER}>Timer</option>
                             <option value={CHOICES.STOPWATCH}>Stopwatch</option>
                             <option value={CHOICES.REPEAT}>Repeat</option>
                         </select>
                         {this.renderModalSelectedOptionProperties()}
-                        <button onClick={this.addTask.bind(this, null)}>Add</button>
+                        <button onClick={this.addOrEditTask.bind(this)}>OK</button>
                         <button onClick={this.closeModal.bind(this)}>Cancel</button>
                     </div>
                 </Modal>
-
-                <div className="export">
-                    <textarea value={this.state.exportUrl} cols="80" rows="6" readOnly="readOnly"/>
-                </div>
             </div>
         );
     }

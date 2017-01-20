@@ -129,12 +129,14 @@ const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
 function ActionList(props) {
     let moveUp = null;
+    let taskId = props.task.id;
+
     if (props.canMoveUp) {
-        moveUp = <a onClick={() => props.moveTaskUp(props.taskListNode, props.index)}>Up</a>;
+        moveUp = <a onClick={() => props.moveTaskUp(props.taskListNode, taskId)}>Up</a>;
     }
     let moveDown = null;
     if (props.canMoveDown) {
-        moveDown = <a onClick={() => props.moveTaskDown(props.taskListNode, props.index)}>Down</a>;
+        moveDown = <a onClick={() => props.moveTaskDown(props.taskListNode, taskId)}>Down</a>;
     }
     return <div className="actionList">
         <div className="navigation">
@@ -142,10 +144,10 @@ function ActionList(props) {
             {moveDown}
         </div>
         <div>
-            <a onClick={() => props.removeTask(props.taskListNode, props.index)}>
+            <a onClick={() => props.removeTask(props.taskListNode, taskId)}>
                 Remove
             </a>
-            <a onClick={() => props.openEditModal(props.taskListNode, props.index)}>
+            <a onClick={() => props.openEditModal(props.taskListNode, taskId)}>
                 Edit
             </a>
         </div>
@@ -161,7 +163,6 @@ function TaskList(props) {
             <div className="task-list">
                 {props.taskList.map(
                     (task, index) => <TaskComponent
-                        index={index}
                         task={task}
                         taskListNode={taskListNode}
                         key={task.id}
@@ -221,11 +222,11 @@ function RepeatComponent(props) {
 function TaskComponent(props) {
     let task = props.task;
     let actionList = <ActionList
+        task={task}
         canMoveUp={props.canMoveUp}
         canMoveDown={props.canMoveDown}
         moveTaskUp={props.moveTaskUp}
         moveTaskDown={props.moveTaskDown}
-        index={props.index}
         taskListNode={props.taskListNode}
         removeTask={props.removeTask}
         openEditModal={props.openEditModal}/>;
@@ -389,34 +390,39 @@ class App extends React.Component {
             value={this.state.modalRepeatInput}/>
     }
 
-    moveTaskUp(taskListNode, index) {
+    moveTaskUp(taskListNode, taskId) {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskListNode);
+        let index = findTaskIndexById(listToChange, taskId);
         swapMove(listToChange, index - 1, index);
         this.changeTaskList(modifiedTaskList);
     }
 
-    moveTaskDown(taskListNode, index) {
+    moveTaskDown(taskListNode, taskId) {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskListNode);
+        let index = findTaskIndexById(listToChange, taskId);
         swapMove(listToChange, index, index + 1);
         this.changeTaskList(modifiedTaskList);
     }
 
-    removeTask(taskListNode, index) {
+    removeTask(taskListNode, taskId) {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, taskListNode);
+        let index = findTaskIndexById(listToChange, taskId);
         listToChange.splice(index, 1);
         this.changeTaskList(modifiedTaskList);
     }
 
-    openEditModal(taskListNode, index) {
-        let task;
+    openEditModal(taskListNode, taskId) {
+        let actualTaskList;
         if (taskListNode === null) {
-            task = this.state.taskList[index];
+            actualTaskList = this.state.taskList;
         } else {
-            task = taskListNode.taskList[index];
+            actualTaskList = taskListNode.taskList;
         }
+        let index = findTaskIndexById(actualTaskList, taskId);
+        let task = actualTaskList[index];
 
         this.setState({
             addPlaceNode: taskListNode,

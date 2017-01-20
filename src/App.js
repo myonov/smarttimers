@@ -4,11 +4,67 @@ import './App.css'
 
 const ID_LENGTH = 10;
 
-const CHOICES = {
+const TASK_CHOICES = {
     TIMER: 'timer',
     STOPWATCH: 'stopwatch',
     REPEAT: 'repeat',
 };
+
+function ValidationException(message) {
+    this.message = message;
+    this.name = 'ValidationException';
+}
+
+function forceParseInt(iString) {
+    let intRegex = /^([0-9]+)$/;
+
+    let matches = intRegex.exec(iString);
+    if (matches === null) {
+        return null;
+    }
+    return parseInt(iString, 10);
+}
+
+function hmsTimeStringToSeconds(hmsTimeString) {
+    let hmsRegex = /^([0-9]+h)?([0-9]+m)?([0-9]+s)?$/;
+    let factor = {
+        s: 1,
+        m: 60,
+        h: 60 * 60,
+    };
+
+    let matches = hmsRegex.exec(hmsTimeString);
+    if (matches === null) {
+        return null;
+    }
+
+    let result = 0;
+    for (let i = 1; i < matches.length; ++i) {
+        for (let j in factor) {
+            if (matches[i] && matches[i][matches[i].length - 1] === j) {
+                result += parseInt(matches[i].substring(0, matches[i].length - 1), 10) * factor[j];
+            }
+        }
+    }
+
+    return result;
+}
+
+function timeStringToSeconds(timeString) {
+    let seconds = hmsTimeStringToSeconds(timeString) || forceParseInt(timeString);
+    if (seconds === null) {
+        throw new ValidationException('Invalid time string');
+    }
+    return seconds;
+}
+
+function repeatCycles(iString) {
+    let cycles = forceParseInt(iString);
+    if (cycles === null) {
+        throw new ValidationException('Invalid number');
+    }
+    return cycles;
+}
 
 function generateId(length) {
     let result = '';
@@ -29,7 +85,7 @@ function findTaskList(taskList, node) {
 
     for (let i = 0; i < taskList.length; ++i) {
         let task = taskList[i];
-        if (task.type === CHOICES.REPEAT) {
+        if (task.type === TASK_CHOICES.REPEAT) {
             if (task.id === node.id) {
                 return task.taskList;
             } else {
@@ -69,7 +125,7 @@ function decodeToArray(data) {
     return JSON.parse(decodeURIComponent(data));
 }
 
-const DEFAULT_MODAL_SELECTED_OPTION = CHOICES.TIMER;
+const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
 function ActionList(props) {
     let moveUp = null;
@@ -174,10 +230,10 @@ function TaskComponent(props) {
         removeTask={props.removeTask}
         openEditModal={props.openEditModal}/>;
 
-    if (task.type === CHOICES.TIMER) {
+    if (task.type === TASK_CHOICES.TIMER) {
         return <TimerComponent task={task} actionList={actionList}/>
     }
-    if (task.type === CHOICES.STOPWATCH) {
+    if (task.type === TASK_CHOICES.STOPWATCH) {
         return <StopwatchComponent task={task} actionList={actionList}/>
     }
     return <RepeatComponent {...props} actionList={actionList}/>
@@ -208,22 +264,23 @@ class App extends React.Component {
             modalTaskName: '',
             modalTimerInput: '',
             modalRepeatInput: '',
+            validationErrorMessage: null,
         };
     }
 
     createTimerTask() {
         return {
             id: generateId(ID_LENGTH),
-            type: CHOICES.TIMER,
+            type: TASK_CHOICES.TIMER,
             title: this.state.modalTaskName,
-            timer: this.state.modalTimerInput,
+            timer: timeStringToSeconds(this.state.modalTimerInput),
         };
     }
 
     createStopwatchTask() {
         return {
             id: generateId(ID_LENGTH),
-            type: CHOICES.STOPWATCH,
+            type: TASK_CHOICES.STOPWATCH,
             title: this.state.modalTaskName,
         };
     }
@@ -231,18 +288,18 @@ class App extends React.Component {
     createRepeatTask() {
         return {
             id: generateId(ID_LENGTH),
-            type: CHOICES.REPEAT,
+            type: TASK_CHOICES.REPEAT,
             title: this.state.modalTaskName,
-            repeat: this.state.modalRepeatInput,
+            repeat: repeatCycles(this.state.modalRepeatInput),
             taskList: [],
         };
     }
 
     createTask() {
-        if (this.state.modalSelectedOption === CHOICES.TIMER) {
+        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
             return this.createTimerTask();
         }
-        if (this.state.modalSelectedOption === CHOICES.STOPWATCH) {
+        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
             return this.createStopwatchTask();
         }
         return this.createRepeatTask();
@@ -275,11 +332,16 @@ class App extends React.Component {
     }
 
     addOrEditTask() {
+        if (!this.validate()) {
+            return;
+        }
+
         if (this.state.editedTaskId === null) {
             this.addTask();
         } else {
             this.editTask();
         }
+
         this.closeModal();
     }
 
@@ -299,6 +361,7 @@ class App extends React.Component {
             modalRepeatInput: '',
             modalIsOpen: false,
             editedTaskId: null,
+            validationErrorMessage: null,
         });
     }
 
@@ -313,10 +376,10 @@ class App extends React.Component {
     }
 
     renderModalSelectedOptionProperties() {
-        if (this.state.modalSelectedOption === CHOICES.STOPWATCH) {
+        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
             return null;
         }
-        if (this.state.modalSelectedOption === CHOICES.TIMER) {
+        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
             return <input
                 onChange={this.modalInputChange.bind(this, 'modalTimerInput')}
                 value={this.state.modalTimerInput}/>
@@ -354,14 +417,13 @@ class App extends React.Component {
         } else {
             task = taskListNode.taskList[index];
         }
-        console.log(task);
 
         this.setState({
             addPlaceNode: taskListNode,
             modalTaskName: task.title,
             modalSelectedOption: task.type,
-            modalTimerInput: task.type === CHOICES.TIMER ? task.timer : '',
-            modalRepeatInput: task.type === CHOICES.REPEAT ? task.repeat : '',
+            modalTimerInput: task.type === TASK_CHOICES.TIMER ? task.timer : '',
+            modalRepeatInput: task.type === TASK_CHOICES.REPEAT ? task.repeat : '',
             editedTaskId: task.id,
         });
 
@@ -370,6 +432,27 @@ class App extends React.Component {
 
     isEditMode() {
         return this.state.editedTaskId !== null;
+    }
+
+    validate() {
+        try {
+            this.createTask();
+            return true;
+        } catch (e) {
+            this.setState({
+                validationErrorMessage: e.message,
+            });
+        }
+        return false;
+    }
+
+    renderValidationErrors() {
+        if (!this.state.validationErrorMessage) {
+            return null;
+        }
+        return <div className="error-message">
+            {this.state.validationErrorMessage}
+        </div>
     }
 
     render() {
@@ -400,11 +483,12 @@ class App extends React.Component {
                             onChange={this.modalInputChange.bind(this, 'modalSelectedOption')}
                             disabled={this.isEditMode()}>
 
-                            <option value={CHOICES.TIMER}>Timer</option>
-                            <option value={CHOICES.STOPWATCH}>Stopwatch</option>
-                            <option value={CHOICES.REPEAT}>Repeat</option>
+                            <option value={TASK_CHOICES.TIMER}>Timer</option>
+                            <option value={TASK_CHOICES.STOPWATCH}>Stopwatch</option>
+                            <option value={TASK_CHOICES.REPEAT}>Repeat</option>
                         </select>
                         {this.renderModalSelectedOptionProperties()}
+                        {this.renderValidationErrors()}
                         <button onClick={this.addOrEditTask.bind(this)}>OK</button>
                         <button onClick={this.closeModal.bind(this)}>Cancel</button>
                     </div>

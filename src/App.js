@@ -155,8 +155,7 @@ function ActionList(props) {
 }
 
 function TaskList(props) {
-    let containerClassName = props.containerClassName || '';
-    let taskListNode = props.taskListNode;
+    let {containerClassName, taskListNode, childProps} = props;
 
     return (
         <div className={containerClassName}>
@@ -168,11 +167,7 @@ function TaskList(props) {
                         key={task.id}
                         canMoveUp={index > 0}
                         canMoveDown={index < props.taskList.length - 1}
-                        moveTaskUp={props.moveTaskUp}
-                        moveTaskDown={props.moveTaskDown}
-                        removeTask={props.removeTask}
-                        openEditModal={props.openEditModal}
-                        openModal={props.openModal}/>)}
+                        {...childProps} />)}
             </div>
             <div>
                 <a onClick={() => props.openModal(taskListNode)}>Add task</a>
@@ -202,6 +197,12 @@ function StopwatchComponent(props) {
 
 function RepeatComponent(props) {
     let task = props.task;
+    let childProps = {
+        moveTaskUp: props.moveTaskUp,
+        moveTaskDown: props.moveTaskDown,
+        removeTask: props.removeTask,
+        openEditModal: props.openEditModal,
+    };
 
     return <div className="component repeat-component">
         <h3>{task.title}</h3>
@@ -211,10 +212,7 @@ function RepeatComponent(props) {
         <TaskList
             taskList={task.taskList}
             openModal={props.openModal}
-            moveTaskUp={props.moveTaskUp}
-            moveTaskDown={props.moveTaskDown}
-            removeTask={props.removeTask}
-            openEditModal={props.openEditModal}
+            childProps={childProps}
             taskListNode={task}/>
     </div>
 }
@@ -237,6 +235,7 @@ function TaskComponent(props) {
     if (task.type === TASK_CHOICES.STOPWATCH) {
         return <StopwatchComponent task={task} actionList={actionList}/>
     }
+
     return <RepeatComponent {...props} actionList={actionList}/>
 }
 
@@ -267,43 +266,68 @@ class App extends React.Component {
             modalRepeatInput: '',
             validationErrorMessage: null,
         };
+
+        this.bindMethods();
     }
 
-    createTimerTask() {
+    bindMethods() {
+        this.openModal = this.openModal.bind(this);
+        this.moveTaskUp = this.moveTaskUp.bind(this);
+        this.moveTaskDown = this.moveTaskDown.bind(this);
+        this.removeTask = this.removeTask.bind(this);
+        this.openEditModal = this.openEditModal.bind(this);
+        this.modalAfterOpen = this.modalAfterOpen.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+        this.modalInputChange = this.modalInputChange.bind(this);
+        this.addOrEditTask = this.addOrEditTask.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+    }
+
+    getTimerProperties() {
         return {
-            id: generateId(ID_LENGTH),
-            type: TASK_CHOICES.TIMER,
             title: this.state.modalTaskName,
             timer: timeStringToSeconds(this.state.modalTimerInput),
         };
     }
 
-    createStopwatchTask() {
+    getStopwatchProperties() {
         return {
-            id: generateId(ID_LENGTH),
-            type: TASK_CHOICES.STOPWATCH,
             title: this.state.modalTaskName,
         };
     }
 
-    createRepeatTask() {
-        return {
-            id: generateId(ID_LENGTH),
-            type: TASK_CHOICES.REPEAT,
+    getRepeatProperties() {
+        let taskList = [];
+        let properties = {
             title: this.state.modalTaskName,
             repeat: repeatCycles(this.state.modalRepeatInput),
-            taskList: [],
         };
+
+        if (!this.isEditMode()) {
+            properties[taskList] = [];
+        }
+
+        return properties;
+    }
+
+    getTaskProperties() {
+        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
+            return this.getTimerProperties();
+        }
+        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
+            return this.getStopwatchProperties();
+        }
+
+        return this.getRepeatProperties();
     }
 
     createTask() {
-        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
-            return this.createTimerTask();
-        }
-        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
-            return this.createStopwatchTask();
-        }
-        return this.createRepeatTask();
+        let task = {
+            id: generateId(ID_LENGTH),
+            type: this.state.modalSelectedOption,
+        };
+        let taskProperties = this.getTaskProperties();
+        return Object.assign(task, taskProperties);
     }
 
     changeTaskList(newTaskList) {
@@ -325,10 +349,8 @@ class App extends React.Component {
         let modifiedTaskList = deepCopy(this.state.taskList);
         let listToChange = findTaskList(modifiedTaskList, this.state.addPlaceNode);
         let taskIndex = findTaskIndexById(listToChange, this.state.editedTaskId);
-        let task = this.createTask();
-
-        task.id = this.state.editedTaskId;
-        listToChange[taskIndex] = task;
+        let properties = this.getTaskProperties();
+        listToChange[taskIndex] = Object.assign(listToChange[taskIndex], properties);
         this.changeTaskList(modifiedTaskList);
     }
 
@@ -382,11 +404,11 @@ class App extends React.Component {
         }
         if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
             return <input
-                onChange={this.modalInputChange.bind(this, 'modalTimerInput')}
+                onChange={(e) => this.modalInputChange('modalTimerInput', e)}
                 value={this.state.modalTimerInput}/>
         }
         return <input
-            onChange={this.modalInputChange.bind(this, 'modalRepeatInput')}
+            onChange={(e) => this.modalInputChange('modalRepeatInput', e)}
             value={this.state.modalRepeatInput}/>
     }
 
@@ -468,25 +490,27 @@ class App extends React.Component {
                 <TaskList
                     containerClassName="main-tasklist"
                     taskList={this.state.taskList}
-                    openModal={this.openModal.bind(this)}
-                    moveTaskUp={this.moveTaskUp.bind(this)}
-                    moveTaskDown={this.moveTaskDown.bind(this)}
                     taskListNode={null}
-                    removeTask={this.removeTask.bind(this)}
-                    openEditModal={this.openEditModal.bind(this)}/>
+                    childProps={{
+                        openModal: this.openModal,
+                        moveTaskUp: this.moveTaskUp,
+                        moveTaskDown: this.moveTaskDown,
+                        removeTask: this.removeTask,
+                        openEditModal: this.openEditModal,
+                    }}/>
 
                 <Modal
                     isOpen={this.state.modalIsOpen}
-                    onAfterOpen={this.modalAfterOpen.bind(this)}
-                    onRequestClose={this.closeModal.bind(this)}
+                    onAfterOpen={this.modalAfterOpen}
+                    onRequestClose={this.closeModal}
                     contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}>
                     <div>
                         <input
-                            onChange={this.modalInputChange.bind(this, 'modalTaskName')}
+                            onChange={(e) => this.modalInputChange('modalTaskName', e)}
                             ref={input => this.input = input} value={this.state.modalTaskName}/>
                         <select
                             value={this.state.modalSelectedOption}
-                            onChange={this.modalInputChange.bind(this, 'modalSelectedOption')}
+                            onChange={(e) => this.modalInputChange('modalSelectedOption', e)}
                             disabled={this.isEditMode()}>
 
                             <option value={TASK_CHOICES.TIMER}>Timer</option>
@@ -495,8 +519,8 @@ class App extends React.Component {
                         </select>
                         {this.renderModalSelectedOptionProperties()}
                         {this.renderValidationErrors()}
-                        <button onClick={this.addOrEditTask.bind(this)}>OK</button>
-                        <button onClick={this.closeModal.bind(this)}>Cancel</button>
+                        <button onClick={this.addOrEditTask}>OK</button>
+                        <button onClick={this.closeModal}>Cancel</button>
                     </div>
                 </Modal>
             </div>

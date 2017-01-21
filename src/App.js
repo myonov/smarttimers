@@ -130,13 +130,14 @@ const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 function ActionList(props) {
     let moveUp = null;
     let taskId = props.task.id;
+    let callbacks = props.callbacks;
 
     if (props.canMoveUp) {
-        moveUp = <a onClick={() => props.moveTaskUp(props.taskListNode, taskId)}>Up</a>;
+        moveUp = <a onClick={() => callbacks.moveTaskUp(props.taskListNode, taskId)}>Up</a>;
     }
     let moveDown = null;
     if (props.canMoveDown) {
-        moveDown = <a onClick={() => props.moveTaskDown(props.taskListNode, taskId)}>Down</a>;
+        moveDown = <a onClick={() => callbacks.moveTaskDown(props.taskListNode, taskId)}>Down</a>;
     }
     return <div className="actionList">
         <div className="navigation">
@@ -144,10 +145,10 @@ function ActionList(props) {
             {moveDown}
         </div>
         <div>
-            <a onClick={() => props.removeTask(props.taskListNode, taskId)}>
+            <a onClick={() => callbacks.removeTask(props.taskListNode, taskId)}>
                 Remove
             </a>
-            <a onClick={() => props.openEditModal(props.taskListNode, taskId)}>
+            <a onClick={() => callbacks.openEditModal(props.taskListNode, taskId)}>
                 Edit
             </a>
         </div>
@@ -155,7 +156,7 @@ function ActionList(props) {
 }
 
 function TaskList(props) {
-    let {containerClassName, taskListNode, childProps} = props;
+    let {containerClassName, taskListNode, callbacks} = props;
 
     return (
         <div className={containerClassName}>
@@ -167,10 +168,10 @@ function TaskList(props) {
                         key={task.id}
                         canMoveUp={index > 0}
                         canMoveDown={index < props.taskList.length - 1}
-                        {...childProps} />)}
+                        callbacks={callbacks} />)}
             </div>
             <div>
-                <a onClick={() => props.openModal(taskListNode)}>Add task</a>
+                <a onClick={() => callbacks.openModal(taskListNode)}>Add task</a>
             </div>
         </div>
     );
@@ -197,12 +198,6 @@ function StopwatchComponent(props) {
 
 function RepeatComponent(props) {
     let task = props.task;
-    let childProps = {
-        moveTaskUp: props.moveTaskUp,
-        moveTaskDown: props.moveTaskDown,
-        removeTask: props.removeTask,
-        openEditModal: props.openEditModal,
-    };
 
     return <div className="component repeat-component">
         <h3>{task.title}</h3>
@@ -212,7 +207,7 @@ function RepeatComponent(props) {
         <TaskList
             taskList={task.taskList}
             openModal={props.openModal}
-            childProps={childProps}
+            callbacks={props.callbacks}
             taskListNode={task}/>
     </div>
 }
@@ -220,14 +215,11 @@ function RepeatComponent(props) {
 function TaskComponent(props) {
     let task = props.task;
     let actionList = <ActionList
+        taskListNode={props.taskListNode}
         task={task}
         canMoveUp={props.canMoveUp}
         canMoveDown={props.canMoveDown}
-        moveTaskUp={props.moveTaskUp}
-        moveTaskDown={props.moveTaskDown}
-        taskListNode={props.taskListNode}
-        removeTask={props.removeTask}
-        openEditModal={props.openEditModal}/>;
+        callbacks={props.callbacks}/>;
 
     if (task.type === TASK_CHOICES.TIMER) {
         return <TimerComponent task={task} actionList={actionList}/>
@@ -491,7 +483,7 @@ class App extends React.Component {
                     containerClassName="main-tasklist"
                     taskList={this.state.taskList}
                     taskListNode={null}
-                    childProps={{
+                    callbacks={{
                         openModal: this.openModal,
                         moveTaskUp: this.moveTaskUp,
                         moveTaskDown: this.moveTaskDown,

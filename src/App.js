@@ -128,27 +128,22 @@ function decodeToArray(data) {
 const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
 function ActionList(props) {
-    let moveUp = null;
-    let taskId = props.task.id;
-    let callbacks = props.callbacks;
+    let {task, taskListNode, callbacks} = props;
 
-    if (props.canMoveUp) {
-        moveUp = <a onClick={() => callbacks.moveTaskUp(props.taskListNode, taskId)}>Up</a>;
-    }
-    let moveDown = null;
-    if (props.canMoveDown) {
-        moveDown = <a onClick={() => callbacks.moveTaskDown(props.taskListNode, taskId)}>Down</a>;
-    }
     return <div className="actionList">
         <div className="navigation">
-            {moveUp}
-            {moveDown}
+            {props.canMoveUp ?
+                <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}>Up</a> :
+                null}
+            {props.canMoveDown ?
+                <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}>Down</a> :
+                null}
         </div>
         <div>
-            <a onClick={() => callbacks.removeTask(props.taskListNode, taskId)}>
+            <a onClick={() => callbacks.removeTask(taskListNode, task.id)}>
                 Remove
             </a>
-            <a onClick={() => callbacks.openEditModal(props.taskListNode, taskId)}>
+            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                 Edit
             </a>
         </div>
@@ -156,18 +151,18 @@ function ActionList(props) {
 }
 
 function TaskList(props) {
-    let {containerClassName, taskListNode, callbacks} = props;
+    let {containerClassName, taskListNode, taskList, callbacks} = props;
 
     return (
         <div className={containerClassName}>
             <div className="task-list">
-                {props.taskList.map(
+                {taskList.map(
                     (task, index) => <TaskComponent
                         task={task}
                         taskListNode={taskListNode}
                         key={task.id}
                         canMoveUp={index > 0}
-                        canMoveDown={index < props.taskList.length - 1}
+                        canMoveDown={index < taskList.length - 1}
                         callbacks={callbacks} />)}
             </div>
             <div>
@@ -178,48 +173,48 @@ function TaskList(props) {
 }
 
 function TimerComponent(props) {
-    let task = props.task;
+    let {task, actionList} = props;
 
     return <div className="component timer-component">
         <h3>{task.title}</h3>
         <h4>Duration: {task.timer}</h4>
-        {props.actionList}
+        {actionList}
     </div>
 }
 
 function StopwatchComponent(props) {
-    let task = props.task;
+    let {task, actionList} = props;
 
     return <div className="component stopwatch-component">
         <h3>{task.title}</h3>
-        {props.actionList}
+        {actionList}
     </div>
 }
 
 function RepeatComponent(props) {
-    let task = props.task;
+    let {task, actionList, callbacks} = props;
 
     return <div className="component repeat-component">
         <h3>{task.title}</h3>
         <h4>Repeat: {task.repeat}</h4>
-        {props.actionList}
+        {actionList}
 
         <TaskList
+            containerName="repeat-container"
             taskList={task.taskList}
-            openModal={props.openModal}
-            callbacks={props.callbacks}
+            callbacks={callbacks}
             taskListNode={task}/>
     </div>
 }
 
 function TaskComponent(props) {
-    let task = props.task;
+    let {task, taskListNode, canMoveUp, canMoveDown, callbacks} = props;
     let actionList = <ActionList
-        taskListNode={props.taskListNode}
+        taskListNode={taskListNode}
         task={task}
-        canMoveUp={props.canMoveUp}
-        canMoveDown={props.canMoveDown}
-        callbacks={props.callbacks}/>;
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        callbacks={callbacks}/>;
 
     if (task.type === TASK_CHOICES.TIMER) {
         return <TimerComponent task={task} actionList={actionList}/>
@@ -228,13 +223,35 @@ function TaskComponent(props) {
         return <StopwatchComponent task={task} actionList={actionList}/>
     }
 
-    return <RepeatComponent {...props} actionList={actionList}/>
+    return <RepeatComponent
+        task={task}
+        taskListNode={taskListNode}
+        callbacks={callbacks}
+        actionList={actionList}/>
 }
 
 class App extends React.Component {
     constructor() {
         super();
 
+        this.initUrlHash();
+
+        this.state = {
+            taskList: this.initialTaskList,
+            exportUrl: this.initialExport,
+            modalIsOpen: false,
+            editedTaskId: null,
+            modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
+            modalTaskName: '',
+            modalTimerInput: '',
+            modalRepeatInput: '',
+            validationErrorMessage: null,
+        };
+
+        this.bindMethods();
+    }
+
+    initUrlHash() {
         let locationHash = window.location.hash.substr(1);
 
         let initialTaskList = [];
@@ -247,19 +264,8 @@ class App extends React.Component {
         }
         let initialExport = encodeArray(initialTaskList);
 
-        this.state = {
-            taskList: initialTaskList,
-            exportUrl: initialExport,
-            modalIsOpen: false,
-            editedTaskId: null,
-            modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
-            modalTaskName: '',
-            modalTimerInput: '',
-            modalRepeatInput: '',
-            validationErrorMessage: null,
-        };
-
-        this.bindMethods();
+        this.initialTaskList = initialTaskList;
+        this.initialExport = initialExport;
     }
 
     bindMethods() {

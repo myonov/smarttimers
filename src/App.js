@@ -78,21 +78,19 @@ function deepCopy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function findTaskList(taskList, node) {
-    if (node == null) {
+function findTaskList(workNode, node) {
+    let taskList = workNode.taskList;
+
+    if (workNode.id === node.id) {
         return taskList;
     }
 
     for (let i = 0; i < taskList.length; ++i) {
         let task = taskList[i];
         if (task.type === TASK_CHOICES.REPEAT) {
-            if (task.id === node.id) {
-                return task.taskList;
-            } else {
-                let result = findTaskList(task.taskList, node);
-                if (result !== undefined) {
-                    return result;
-                }
+            let result = findTaskList(task, node);
+            if (result !== undefined) {
+                return result;
             }
         }
     }
@@ -106,8 +104,8 @@ function findTaskIndexById(taskList, id) {
     }
 }
 
-function insertIntoTaskList(startList, node, task) {
-    let taskList = findTaskList(startList, node);
+function insertIntoTaskList(startNode, node, task) {
+    let taskList = findTaskList(startNode, node);
     taskList.push(task);
 }
 
@@ -151,7 +149,8 @@ function ActionList(props) {
 }
 
 function TaskList(props) {
-    let {containerClassName, taskListNode, taskList, callbacks} = props;
+    let {containerClassName, taskListNode, callbacks} = props;
+    let taskList = taskListNode.taskList;
 
     return (
         <div className={containerClassName}>
@@ -201,7 +200,6 @@ function RepeatComponent(props) {
 
         <TaskList
             containerName="repeat-container"
-            taskList={task.taskList}
             callbacks={callbacks}
             taskListNode={task}/>
     </div>
@@ -225,7 +223,6 @@ function TaskComponent(props) {
 
     return <RepeatComponent
         task={task}
-        taskListNode={taskListNode}
         callbacks={callbacks}
         actionList={actionList}/>
 }
@@ -237,7 +234,7 @@ class App extends React.Component {
         this.initUrlHash();
 
         this.state = {
-            taskList: this.initialTaskList,
+            root: this.initialRoot,
             exportUrl: this.initialExport,
             modalIsOpen: false,
             editedTaskId: null,
@@ -254,17 +251,20 @@ class App extends React.Component {
     initUrlHash() {
         let locationHash = window.location.hash.substr(1);
 
-        let initialTaskList = [];
+        let initialRoot;
         if (locationHash.length > 0) {
             try {
-                initialTaskList = decodeToArray(locationHash);
+                initialRoot = decodeToArray(locationHash);
             } catch (_) {
-                initialTaskList = [];
+                initialRoot = {
+                    id: 'root',
+                    taskList: [],
+                };
             }
         }
-        let initialExport = encodeArray(initialTaskList);
+        let initialExport = encodeArray(initialRoot);
 
-        this.initialTaskList = initialTaskList;
+        this.initialRoot = initialRoot;
         this.initialExport = initialExport;
     }
 
@@ -302,7 +302,7 @@ class App extends React.Component {
         };
 
         if (!this.isEditMode()) {
-            properties[taskList] = [];
+            properties['taskList'] = [];
         }
 
         return properties;
@@ -328,19 +328,19 @@ class App extends React.Component {
         return Object.assign(task, taskProperties);
     }
 
-    changeTaskList(newTaskList) {
-        let exported = encodeArray(newTaskList);
+    changeTaskList(newRoot) {
+        let exported = encodeArray(newRoot);
         this.setState({
-            taskList: newTaskList,
+            root: newRoot,
             exportUrl: exported,
         }, () => window.location.hash=exported);
     }
 
     addTask() {
         let taskObj = this.createTask();
-        let modifiedTaskList = deepCopy(this.state.taskList);
-        insertIntoTaskList(modifiedTaskList, this.state.addPlaceNode, taskObj);
-        this.changeTaskList(modifiedTaskList);
+        let modifiedRoot = deepCopy(this.state.root);
+        insertIntoTaskList(modifiedRoot, this.state.addPlaceNode, taskObj);
+        this.changeTaskList(modifiedRoot);
     }
 
     addOrEditTask() {
@@ -402,11 +402,11 @@ class App extends React.Component {
     }
 
     _transformTaskList(taskListNode, taskId, transformCallback) {
-        let modifiedTaskList = deepCopy(this.state.taskList);
-        let listToChange = findTaskList(modifiedTaskList, taskListNode);
+        let modifiedRoot = deepCopy(this.state.root);
+        let listToChange = findTaskList(modifiedRoot, taskListNode);
         let index = findTaskIndexById(listToChange, taskId);
         transformCallback(listToChange, index);
-        this.changeTaskList(modifiedTaskList);
+        this.changeTaskList(modifiedRoot);
     }
 
     moveTaskUp(taskListNode, taskId) {
@@ -512,8 +512,7 @@ class App extends React.Component {
                 <h3>Task List</h3>
                 <TaskList
                     containerClassName="main-tasklist"
-                    taskList={this.state.taskList}
-                    taskListNode={null}
+                    taskListNode={this.state.root}
                     callbacks={{
                         openModal: this.openModal,
                         moveTaskUp: this.moveTaskUp,

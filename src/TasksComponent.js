@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
+import FontAwesome from 'react-fontawesome';
 import './TasksComponent.css'
 
 const ID_LENGTH = 10;
@@ -9,6 +10,8 @@ const TASK_CHOICES = {
     STOPWATCH: 'stopwatch',
     REPEAT: 'repeat',
 };
+
+const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
 function ValidationException(message) {
     this.message = message;
@@ -123,27 +126,28 @@ function decodeToArray(data) {
     return JSON.parse(decodeURIComponent(data));
 }
 
-const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
-
 function ActionList(props) {
     let {task, taskListNode, callbacks, canMoveUp, canMoveDown} = props;
 
     return <div className="actionList">
+        <div>
+            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+                <FontAwesome name="pencil" />
+            </a>
+            <a onClick={() => callbacks.removeTask(taskListNode, task.id)}>
+                <FontAwesome name="close" />
+            </a>
+        </div>
+
         <div className="navigation">
             {canMoveUp ?
-                <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}>Up</a> :
-                null}
+                <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}>
+                    <FontAwesome name="chevron-up" />
+                </a> : null}
             {canMoveDown ?
-                <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}>Down</a> :
-                null}
-        </div>
-        <div>
-            <a onClick={() => callbacks.removeTask(taskListNode, task.id)}>
-                Remove
-            </a>
-            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
-                Edit
-            </a>
+                <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}>
+                    <FontAwesome name="chevron-down" />
+                </a> : null}
         </div>
     </div>
 }
@@ -175,9 +179,13 @@ function TimerComponent(props) {
     let {task, actionList} = props;
 
     return <div className="component timer-component">
-        <h3>{task.title}</h3>
-        <h4>Duration: {task.timer}</h4>
-        {actionList}
+        <div className="info-container">
+            <div className="info">
+                <span className="title">{task.title}</span>
+                <span className="duration"><FontAwesome name="clock-o" />{task.timer}</span>
+                {actionList}
+            </div>
+        </div>
     </div>
 }
 
@@ -185,8 +193,12 @@ function StopwatchComponent(props) {
     let {task, actionList} = props;
 
     return <div className="component stopwatch-component">
-        <h3>{task.title}</h3>
-        {actionList}
+        <div className="info-container">
+            <div className="info">
+                <span className="title">{task.title}</span>
+                {actionList}
+            </div>
+        </div>
     </div>
 }
 
@@ -194,9 +206,13 @@ function RepeatComponent(props) {
     let {task, actionList, callbacks} = props;
 
     return <div className="component repeat-component">
-        <h3>{task.title}</h3>
-        <h4>Repeat: {task.repeat}</h4>
-        {actionList}
+        <div className="info-container">
+            <div className="info">
+                <span className="title">{task.title}</span>
+                <span className="repeat">Repeat: {task.repeat}</span>
+                {actionList}
+            </div>
+        </div>
 
         <TaskList
             containerName="repeat-container"

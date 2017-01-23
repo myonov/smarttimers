@@ -1,5 +1,4 @@
 .component {
-  border: 1px solid black;
   margin-bottom: 10px;
   width: 80%;
   margin-left: auto;
@@ -7,5 +6,23 @@
 }
 
 .main-tasklist {
-  width: 90%;
+  width: 100%;
+}
+
+.title {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.info-container {
+  position: relative;
+  height: 3rem;
+}
+
+.info {
+  top: 10%;
+  position: absolute;
+  border: 1px solid #d2d4e8;
+  border-radius: 2rem;
+  padding-left: 2rem;
 }

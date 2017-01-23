@@ -129,17 +129,17 @@ function decodeToArray(data) {
 function ActionList(props) {
     let {task, taskListNode, callbacks, canMoveUp, canMoveDown} = props;
 
-    return <div className="actionList">
-        <div>
+    return <span className="action-list">
+        <span>
             <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                 <FontAwesome name="pencil" />
             </a>
             <a onClick={() => callbacks.removeTask(taskListNode, task.id)}>
                 <FontAwesome name="close" />
             </a>
-        </div>
+        </span>
 
-        <div className="navigation">
+        <span className="navigation">
             {canMoveUp ?
                 <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}>
                     <FontAwesome name="chevron-up" />
@@ -148,8 +148,8 @@ function ActionList(props) {
                 <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}>
                     <FontAwesome name="chevron-down" />
                 </a> : null}
-        </div>
-    </div>
+        </span>
+    </span>
 }
 
 function TaskList(props) {

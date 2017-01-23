@@ -250,17 +250,20 @@ export default class TasksComponent extends React.Component {
 
     initUrlHash() {
         let locationHash = window.location.hash.substr(1);
+        let emptyRoot = {
+            id: 'root',
+            taskList: [],
+        };
 
         let initialRoot;
         if (locationHash.length > 0) {
             try {
                 initialRoot = decodeToArray(locationHash);
             } catch (_) {
-                initialRoot = {
-                    id: 'root',
-                    taskList: [],
-                };
+                initialRoot = emptyRoot;
             }
+        } else {
+            initialRoot = emptyRoot;
         }
         let initialExport = encodeArray(initialRoot);
 

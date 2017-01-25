@@ -28,6 +28,14 @@ function forceParseInt(iString) {
     return parseInt(iString, 10);
 }
 
+function formatTimeFromSeconds(timeInSeconds) {
+    let hours = parseInt(timeInSeconds / (60 * 60), 10);
+    let minutes = parseInt(timeInSeconds / 60, 10) % 60;
+    let seconds = timeInSeconds % 60;
+
+    return hours + 'h' + minutes + 'm' + seconds + 's';
+}
+
 function hmsTimeStringToSeconds(hmsTimeString) {
     let hmsRegex = /^([0-9]+h)?([0-9]+m)?([0-9]+s)?$/;
     let factor = {
@@ -131,23 +139,25 @@ function ActionList(props) {
 
     return <span className="action-list">
         <span>
-            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+            <a className="edit-task"
+               onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                 <FontAwesome name="pencil" />
             </a>
-            <a onClick={() => callbacks.removeTask(taskListNode, task.id)}>
+            <a className="remove-task"
+               onClick={() => callbacks.removeTask(taskListNode, task.id)}>
                 <FontAwesome name="close" />
             </a>
         </span>
 
         <span className="navigation">
-            {canMoveUp ?
-                <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}>
-                    <FontAwesome name="chevron-up" />
-                </a> : null}
-            {canMoveDown ?
-                <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}>
-                    <FontAwesome name="chevron-down" />
-                </a> : null}
+            <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}
+               className={(canMoveUp ? '' : 'disabled ') + 'move-up'}>
+                <FontAwesome name="chevron-up" />
+            </a>
+            <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}
+               className={(canMoveDown ? '' : 'disabled ') + 'move-down'}>
+                <FontAwesome name="chevron-down" />
+            </a>
         </span>
     </span>
 }
@@ -168,8 +178,12 @@ function TaskList(props) {
                         canMoveDown={index < taskList.length - 1}
                         callbacks={callbacks} />)}
             </div>
-            <div>
-                <a onClick={() => callbacks.openModal(taskListNode)}>Add task</a>
+            <div className="centered">
+                <a className="button"
+                   onClick={() => callbacks.openModal(taskListNode)}>
+                    <FontAwesome name="plus"/>
+                    Add task
+                </a>
             </div>
         </div>
     );
@@ -182,7 +196,10 @@ function TimerComponent(props) {
         <div className="info-container">
             <div className="info">
                 <span className="title">{task.title}</span>
-                <span className="duration"><FontAwesome name="clock-o" />{task.timer}</span>
+                <span className="duration">
+                    <FontAwesome name="hourglass-start" />
+                    {formatTimeFromSeconds(task.timer)}
+                </span>
                 {actionList}
             </div>
         </div>
@@ -196,6 +213,9 @@ function StopwatchComponent(props) {
         <div className="info-container">
             <div className="info">
                 <span className="title">{task.title}</span>
+                <span className="stopwatch">
+                    <FontAwesome name="clock-o" />
+                </span>
                 {actionList}
             </div>
         </div>
@@ -209,7 +229,9 @@ function RepeatComponent(props) {
         <div className="info-container">
             <div className="info">
                 <span className="title">{task.title}</span>
-                <span className="repeat">Repeat: {task.repeat}</span>
+                <span className="repeat">
+                    <FontAwesome name="repeat"/> {task.repeat}
+                </span>
                 {actionList}
             </div>
         </div>

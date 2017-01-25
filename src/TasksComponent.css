@@ -1,36 +1,101 @@
-.component {
-  margin-bottom: 10px;
+.container {
   width: 60%;
+  font-family: Helvetica, sans-serif;
   margin-left: auto;
   margin-right: auto;
 }
 
-.main-tasklist {
-  width: 100%;
+.task-list {
+  margin-left: 40px;
+  border-top: 1px solid #c8282a;
+  border-bottom: 1px solid #c8282a;
+  padding: 2px;
+}
+
+h3 {
+  text-align: center;
 }
 
 .title {
+  display: inline-block;
+  overflow: hidden;
   padding-right: 20px;
 }
 
 .info-container {
   position: relative;
   box-sizing: border-box;
-  height: 3rem;
-  border: 1px solid #d2d4e8;
-  border-radius: 2rem;
+  border-bottom: 1px solid #d2d4e8;
+}
+
+.info-container {
+  border-bottom: none;
 }
 
 .info {
   box-sizing: border-box;
-  top: 30%;
+  top: 18%;
   width: 100%;
-  position: absolute;
-  padding-left: 2rem;
-  padding-right: 1rem;
+  padding: 10px 1rem 10px 1rem;
 }
 
-.action-list {
-  float: right;
+.edit-task {
   display: inline-block;
+  position: absolute;
+  right: 40px;
+  top: 11px;
+}
+
+.remove-task {
+  display: inline-block;
+  position: absolute;
+  right: 22px;
+  top: 11px;
+}
+
+.navigation .move-up {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.navigation .move-down {
+  position: absolute;
+  right: 0;
+  top: 20px;
+}
+
+.edit-remove a {
+  padding-left: 10px;
+}
+
+.edit-remove a:last-child {
+  padding-right: 10px;
+}
+
+a {
+  cursor: pointer;
+}
+
+a.disabled {
+  pointer-events: none;
+  color: #d2d4e8;
+}
+
+.button {
+  display: inline-block;
+  height: 38px;
+  line-height: 38px;
+  padding: 0 30px;
+  text-align: center;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.centered {
+  text-align: center;
 }

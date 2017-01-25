@@ -7,9 +7,15 @@
 
 .task-list {
   margin-left: 40px;
-  border-top: 1px solid #c8282a;
-  border-bottom: 1px solid #c8282a;
-  padding: 2px;
+  margin-bottom: 10px;
+}
+
+.task-list > .component:first-child {
+    border-top: 1px solid #c8282a;
+}
+
+.task-list > .component:last-child {
+    border-bottom: 1px solid #c8282a;
 }
 
 h3 {

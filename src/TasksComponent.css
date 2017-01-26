@@ -1,8 +1,17 @@
 .container {
   width: 60%;
   font-family: Helvetica, sans-serif;
+  letter-spacing: 0.1em;
   margin-left: auto;
   margin-right: auto;
+}
+
+.main-title {
+  font-weight: 400;
+}
+
+.main-tasklist {
+  margin-bottom: 20px;
 }
 
 .task-list {
@@ -15,30 +24,20 @@
 }
 
 .task-list > .component:first-child {
-  border-top: 1px solid #c8282a;
+  border-top: 1px solid #bbb;
 }
 
 .task-list > .component:last-child {
   padding-bottom: 10px;
-  border-bottom: 1px solid #c8282a;
-}
-
-h3 {
-  text-align: center;
+  border-bottom: 1px solid #bbb;
 }
 
 .title {
-  overflow: hidden;
   padding-right: 20px;
 }
 
 .info-container {
   position: relative;
-  box-sizing: border-box;
-  border-bottom: 1px solid #d2d4e8;
-}
-
-.info-container {
   border-bottom: none;
 }
 
@@ -73,21 +72,13 @@ h3 {
   top: 20px;
 }
 
-.edit-remove a {
-  padding-left: 10px;
-}
-
-.edit-remove a:last-child {
-  padding-right: 10px;
-}
-
 a {
   cursor: pointer;
 }
 
 a.disabled {
   pointer-events: none;
-  color: #d2d4e8;
+  color: #bbb;
 }
 
 .button {
@@ -97,8 +88,6 @@ a.disabled {
   padding: 0 30px;
   text-align: center;
   letter-spacing: .1rem;
-  text-transform: uppercase;
-  border-radius: 4px;
   border: 1px solid #bbb;
   cursor: pointer;
   box-sizing: border-box;
@@ -106,4 +95,14 @@ a.disabled {
 
 .centered {
   text-align: center;
+}
+
+@media (max-width: 800px) {
+  .container {
+    width: 100%;
+    font-size: 0.8rem;
+  }
+  .main-tasklist > .task-list {
+    margin-left: 0;
+  }
 }

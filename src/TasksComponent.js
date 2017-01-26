@@ -549,7 +549,7 @@ export default class TasksComponent extends React.Component {
     render() {
         return (
             <div className="container">
-                <h3>Task List</h3>
+                <h3 className="centered main-title">Task List</h3>
                 <TaskList
                     containerClassName="main-tasklist"
                     taskListNode={this.state.root}

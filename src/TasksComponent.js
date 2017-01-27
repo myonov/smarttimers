@@ -315,7 +315,6 @@ export default class TasksComponent extends React.Component {
         this.moveTaskDown = this.moveTaskDown.bind(this);
         this.removeTask = this.removeTask.bind(this);
         this.openEditModal = this.openEditModal.bind(this);
-        this.modalAfterOpen = this.modalAfterOpen.bind(this);
         this.closeModal = this.closeModal.bind(this);
         this.modalInputChange = this.modalInputChange.bind(this);
         this.addOrEditTask = this.addOrEditTask.bind(this);
@@ -423,10 +422,6 @@ export default class TasksComponent extends React.Component {
         this.setState(newState);
     }
 
-    modalAfterOpen() {
-        this.input.focus();
-    }
-
     renderModalSelectedOptionProperties() {
         if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
             return null;
@@ -527,8 +522,9 @@ export default class TasksComponent extends React.Component {
             contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}>
             <div>
                 <input
+                    autoFocus="autoFocus"
                     onChange={(e) => this.modalInputChange('modalTaskName', e)}
-                    ref={input => this.input = input} value={this.state.modalTaskName}/>
+                    value={this.state.modalTaskName}/>
                 <select
                     value={this.state.modalSelectedOption}
                     onChange={(e) => this.modalInputChange('modalSelectedOption', e)}

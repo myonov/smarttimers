@@ -23,6 +23,10 @@
   box-sizing: border-box;
 }
 
+.component .info-container:hover {
+  background-color: lightcoral;
+}
+
 .task-list > .component:first-child {
   border-top: 1px solid #bbb;
 }
@@ -123,12 +127,24 @@ a.disabled {
   border-bottom: 1px solid #bbb;
 }
 
+.modal-content input:focus {
+  border-bottom: 1px solid lightcoral;
+}
+
 .modal-content select {
   border: 1px solid #bbb;
 }
 
+.modal-content select:focus {
+  border: 1px solid lightcoral;
+}
+
 .modal-content input:focus, select:focus {
   outline: none;
+}
+
+.button:hover {
+  color: lightcoral;
 }
 
 @media (max-width: 800px) {
@@ -138,5 +154,10 @@ a.disabled {
   }
   .main-tasklist > .task-list {
     margin-left: 0;
+  }
+
+  .modal-content .button {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }

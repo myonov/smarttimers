@@ -13,6 +13,22 @@ const TASK_CHOICES = {
 
 const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
+const customStyles = {
+    overlay : {
+        backgroundColor   : 'rgba(255, 255, 255, 0.7)'
+    },
+    content : {
+        top                        : '50%',
+        left                       : '50%',
+        right                      : 'auto',
+        bottom                     : 'auto',
+        transform                  : 'translate(-50%, -50%)',
+        border                     : '1px solid #bbb',
+        padding                    : '20px',
+        borderRadius               : '0px',
+    }
+};
+
 function ValidationException(message) {
     this.message = message;
     this.name = 'ValidationException';
@@ -428,10 +444,12 @@ export default class TasksComponent extends React.Component {
         }
         if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
             return <input
+                placeholder="time string"
                 onChange={(e) => this.modalInputChange('modalTimerInput', e)}
                 value={this.state.modalTimerInput}/>
         }
         return <input
+            placeholder="repeats"
             onChange={(e) => this.modalInputChange('modalRepeatInput', e)}
             value={this.state.modalRepeatInput}/>
     }
@@ -481,7 +499,8 @@ export default class TasksComponent extends React.Component {
             addPlaceNode: taskListNode,
             modalTaskName: task.title,
             modalSelectedOption: task.type,
-            modalTimerInput: task.type === TASK_CHOICES.TIMER ? task.timer : '',
+            modalTimerInput: task.type === TASK_CHOICES.TIMER ?
+                formatTimeFromSeconds(task.timer) : '',
             modalRepeatInput: task.type === TASK_CHOICES.REPEAT ? task.repeat : '',
             editedTaskId: task.id,
         });
@@ -519,9 +538,11 @@ export default class TasksComponent extends React.Component {
             isOpen={this.state.modalIsOpen}
             onAfterOpen={this.modalAfterOpen}
             onRequestClose={this.closeModal}
-            contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}>
-            <div>
+            contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}
+            style={customStyles}>
+            <div className="modal-content">
                 <input
+                    placeholder="name"
                     autoFocus="autoFocus"
                     onChange={(e) => this.modalInputChange('modalTaskName', e)}
                     value={this.state.modalTaskName}/>
@@ -536,8 +557,8 @@ export default class TasksComponent extends React.Component {
                 </select>
                 {this.renderModalSelectedOptionProperties()}
                 {this.renderValidationErrors()}
-                <button onClick={this.addOrEditTask}>OK</button>
-                <button onClick={this.closeModal}>Cancel</button>
+                <a onClick={this.addOrEditTask} className="button">OK</a>
+                <a onClick={this.closeModal} className="button">Cancel</a>
             </div>
         </Modal>
     }

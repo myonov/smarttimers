@@ -24,7 +24,7 @@
 }
 
 .repeat-component:hover {
-  border: 2px dashed lightcoral;
+  border: 2px dashed lightcoral !important;
 }
 
 .component .info-container:hover {

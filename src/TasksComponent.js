@@ -282,8 +282,8 @@ function TaskComponent(props) {
 }
 
 export default class TasksComponent extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
         this.initUrlHash();
 
@@ -335,6 +335,7 @@ export default class TasksComponent extends React.Component {
         this.modalInputChange = this.modalInputChange.bind(this);
         this.addOrEditTask = this.addOrEditTask.bind(this);
         this.closeModal = this.closeModal.bind(this);
+        this.transferAction = this.transferAction.bind(this);
     }
 
     getTimerProperties() {
@@ -524,12 +525,28 @@ export default class TasksComponent extends React.Component {
         return false;
     }
 
+    transferAction() {
+        let data = deepCopy(this.state.root);
+        this.props.startCallback(data);
+    }
+
     renderValidationErrors() {
         if (!this.state.validationErrorMessage) {
             return null;
         }
         return <div className="error-message">
             {this.state.validationErrorMessage}
+        </div>
+    }
+
+    renderStartButton() {
+        if (this.state.root.taskList.length === 0) {
+            return null;
+        }
+        return <div className="centered start-container">
+            <a className="button" onClick={this.transferAction}>
+                <FontAwesome name="play"/>Start
+            </a>
         </div>
     }
 
@@ -567,6 +584,7 @@ export default class TasksComponent extends React.Component {
         return (
             <div className="container">
                 <h3 className="centered main-title">Task List</h3>
+                {this.renderStartButton()}
                 <TaskList
                     containerClassName="main-tasklist"
                     taskListNode={this.state.root}

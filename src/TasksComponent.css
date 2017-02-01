@@ -17,6 +17,9 @@
 .task-list {
   margin-left: 40px;
   margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-top: 1px solid #bbb;
+  border-bottom: 1px solid #bbb;
 }
 
 .component {
@@ -31,25 +34,8 @@
   background-color: lightcoral;
 }
 
-.task-list > .component:first-child {
-  padding-top: 10px;
-  border-top: 1px solid #bbb;
-}
-
-.task-list > .component:last-child {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #bbb;
-}
-
 .title {
   padding-right: 20px;
-}
-
-.info-container {
-  position: relative;
-  border-bottom: none;
-  margin-left: 5px;
-  margin-right: 5px;
 }
 
 .info {
@@ -59,37 +45,14 @@
   padding: 10px 1rem 10px 1rem;
 }
 
-.edit-task {
-  position: absolute;
-  right: 40px;
-  top: 11px;
-}
-
 .remove-task {
   position: absolute;
   right: 22px;
   top: 11px;
 }
 
-.navigation .move-up {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.navigation .move-down {
-  position: absolute;
-  right: 0;
-  top: 20px;
-}
-
 a {
   cursor: pointer;
-}
-
-a.disabled {
-  pointer-events: none;
-  color: #bbb;
 }
 
 .button {

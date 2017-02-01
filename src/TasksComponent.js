@@ -205,13 +205,22 @@ function TaskList(props) {
     );
 }
 
+function TaskDescription(props) {
+    let {callbacks, taskListNode, task} = props;
+    return <span className="title">
+        <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+            {task.title}
+        </a>
+    </span>
+}
+
 function TimerComponent(props) {
-    let {task, actionList} = props;
+    let {task, actionList, taskDescription} = props;
 
     return <div className="component timer-component">
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="duration">
                     <FontAwesome name="hourglass-start" />
                     {formatTimeFromSeconds(task.timer)}
@@ -223,12 +232,12 @@ function TimerComponent(props) {
 }
 
 function StopwatchComponent(props) {
-    let {task, actionList} = props;
+    let {taskDescription, actionList} = props;
 
     return <div className="component stopwatch-component">
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="stopwatch">
                     <FontAwesome name="clock-o" />
                 </span>
@@ -239,12 +248,12 @@ function StopwatchComponent(props) {
 }
 
 function RepeatComponent(props) {
-    let {task, actionList, callbacks} = props;
+    let {task, taskDescription, actionList, callbacks} = props;
 
     return <div className="component repeat-component">
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="repeat">
                     <FontAwesome name="repeat"/> {task.repeat}
                 </span>
@@ -268,15 +277,21 @@ function TaskComponent(props) {
         canMoveDown={canMoveDown}
         callbacks={callbacks}/>;
 
+    let taskDescription = <TaskDescription
+        task={task}
+        taskListNode={taskListNode}
+        callbacks={callbacks}/>;
+
     if (task.type === TASK_CHOICES.TIMER) {
-        return <TimerComponent task={task} actionList={actionList}/>
+        return <TimerComponent task={task} taskDescription={taskDescription} actionList={actionList}/>
     }
     if (task.type === TASK_CHOICES.STOPWATCH) {
-        return <StopwatchComponent task={task} actionList={actionList}/>
+        return <StopwatchComponent task={task} taskDescription={taskDescription} actionList={actionList}/>
     }
 
     return <RepeatComponent
         task={task}
+        taskDescription={taskDescription}
         callbacks={callbacks}
         actionList={actionList}/>
 }

@@ -17,9 +17,18 @@
 .task-list {
   margin-left: 40px;
   margin-bottom: 10px;
-  padding-bottom: 10px;
+}
+
+.task-list .component:first-child {
   border-top: 1px solid #bbb;
+}
+
+.task-list .component:last-child {
   border-bottom: 1px solid #bbb;
+}
+
+.add-button-container {
+  margin-bottom: 10px;
 }
 
 .component {

@@ -169,7 +169,7 @@ class TaskList extends React.Component {
                      data-task-list-node={taskListNode.id}>
                     {listToBeSorted}
                 </div>
-                <div className="centered">
+                <div className="centered add-button-container">
                     <a className="button"
                        onClick={() => callbacks.openModal(taskListNode)}>
                         <FontAwesome name="plus"/>

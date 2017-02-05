@@ -30,6 +30,11 @@ const customStyles = {
     }
 };
 
+function hasElementParentWithClass(el, className) {
+    if (el.classList && el.classList.contains(className)) return true;
+    return el.parentNode && hasElementParentWithClass(el.parentNode, className);
+}
+
 function ValidationException(message) {
     this.message = message;
     this.name = 'ValidationException';
@@ -177,9 +182,12 @@ class TaskList extends React.Component {
 
     dragulaDecorator = (componentInstance) => {
         if (componentInstance) {
-            let options = {};
+            let options = {
+                moves: (el, container, handle) =>
+                    hasElementParentWithClass(handle, 'sortable-handle-container')
+            };
             let drake = Dragula([componentInstance], options);
-            drake.on('drop', (el, target, source, sibling) => {
+            drake.on('drop', (el, target) => {
                 let taskListNodeId = target.dataset.taskListNode;
                 let sortedIds = [];
                 for (let child of target.children) {
@@ -204,6 +212,9 @@ function TimerComponent(props) {
     let {task, taskDescription} = props;
 
     return <div className="component timer-component" data-task-id={task.id}>
+        <div className="sortable-handle-container">
+            <FontAwesome name="plus-square-o" className="sortable-handle"/>
+        </div>
         <div className="info-container">
             <div className="info">
                 {taskDescription}
@@ -220,6 +231,9 @@ function StopwatchComponent(props) {
     let {task, taskDescription} = props;
 
     return <div className="component stopwatch-component" data-task-id={task.id}>
+        <div className="sortable-handle-container">
+            <FontAwesome name="plus-square-o" className="sortable-handle"/>
+        </div>
         <div className="info-container">
             <div className="info">
                 {taskDescription}
@@ -236,6 +250,9 @@ function RepeatComponent(props) {
 
     return <div className="component repeat-component"
                 data-task-id={task.id}>
+        <div className="sortable-handle-container">
+            <FontAwesome name="plus-square-o" className="sortable-handle"/>
+        </div>
         <div className="info-container">
             <div className="info">
                 {taskDescription}

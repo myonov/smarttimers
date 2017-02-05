@@ -30,6 +30,10 @@
   border: 2px dashed lightcoral !important;
 }
 
+.info-container {
+  display: inline-block;
+}
+
 .component .info-container:hover {
   background-color: lightcoral;
 }
@@ -127,9 +131,14 @@ a {
   opacity: 0.75;
 }
 
-
 .gu-mirror {
   display: none;
+}
+
+.sortable-handle-container {
+  display: inline-block;
+  width: 30px;
+  text-align: center;
 }
 
 @media (max-width: 800px) {

@@ -1,7 +1,8 @@
-import React from 'react';
-import Modal from 'react-modal';
-import FontAwesome from 'react-fontawesome';
-import './TasksComponent.css'
+import React from "react";
+import Modal from "react-modal";
+import Dragula from "react-dragula";
+import FontAwesome from "react-fontawesome";
+import "./TasksComponent.css";
 
 const ID_LENGTH = 10;
 
@@ -14,18 +15,18 @@ const TASK_CHOICES = {
 const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
 
 const customStyles = {
-    overlay : {
-        backgroundColor   : 'rgba(255, 255, 255, 0.7)'
+    overlay: {
+        backgroundColor: 'rgba(255, 255, 255, 0.7)'
     },
-    content : {
-        top                        : '50%',
-        left                       : '50%',
-        right                      : 'auto',
-        bottom                     : 'auto',
-        transform                  : 'translate(-50%, -50%)',
-        border                     : '1px solid #bbb',
-        padding                    : '20px',
-        borderRadius               : '0px',
+    content: {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        transform: 'translate(-50%, -50%)',
+        border: '1px solid #bbb',
+        padding: '20px',
+        borderRadius: '0px',
     }
 };
 
@@ -136,12 +137,6 @@ function insertIntoTaskList(startNode, node, task) {
     taskList.push(task);
 }
 
-function swapMove(taskList, index1, index2) {
-    let buf = taskList[index1];
-    taskList[index1] = taskList[index2];
-    taskList[index2] = buf;
-}
-
 function encodeArray(arr) {
     return encodeURIComponent(JSON.stringify(arr))
 }
@@ -150,105 +145,103 @@ function decodeToArray(data) {
     return JSON.parse(decodeURIComponent(data));
 }
 
-function ActionList(props) {
-    let {task, taskListNode, callbacks, canMoveUp, canMoveDown} = props;
+class TaskList extends React.Component {
+    render() {
+        let {containerClassName, taskListNode, callbacks} = this.props;
+        let taskList = taskListNode.taskList;
+        let listToBeSorted = taskList.map(
+            (task) => {
+                return <TaskComponent
+                    task={task}
+                    taskListNode={taskListNode}
+                    key={task.id}
+                    callbacks={callbacks}/>
+            });
+        return (
+            <div className={containerClassName}>
+                <div className="task-list"
+                     ref={this.dragulaDecorator}
+                     data-task-list-node={taskListNode.id}>
+                    {listToBeSorted}
+                </div>
+                <div className="centered">
+                    <a className="button"
+                       onClick={() => callbacks.openModal(taskListNode)}>
+                        <FontAwesome name="plus"/>
+                        Add task
+                    </a>
+                </div>
+            </div>
+        );
+    }
 
-    return <span className="action-list">
-        <span>
-            <a className="edit-task"
-               onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
-                <FontAwesome name="pencil" />
-            </a>
-            <a className="remove-task"
-               onClick={() => callbacks.removeTask(taskListNode, task.id)}>
-                <FontAwesome name="close" />
-            </a>
-        </span>
+    dragulaDecorator = (componentInstance) => {
+        if (componentInstance) {
+            let options = {};
+            let drake = Dragula([componentInstance], options);
+            drake.on('drop', (el, target, source, sibling) => {
+                let taskListNodeId = target.dataset.taskListNode;
+                let sortedIds = [];
+                for (let child of target.children) {
+                    sortedIds.push(child.dataset.taskId);
+                }
+                this.props.callbacks.sortList(taskListNodeId, sortedIds);
+            });
+        }
+    }
+}
 
-        <span className="navigation">
-            <a onClick={() => callbacks.moveTaskUp(taskListNode, task.id)}
-               className={(canMoveUp ? '' : 'disabled ') + 'move-up'}>
-                <FontAwesome name="chevron-up" />
-            </a>
-            <a onClick={() => callbacks.moveTaskDown(taskListNode, task.id)}
-               className={(canMoveDown ? '' : 'disabled ') + 'move-down'}>
-                <FontAwesome name="chevron-down" />
-            </a>
-        </span>
+function TaskDescription(props) {
+    let {callbacks, taskListNode, task} = props;
+    return <span className="title">
+        <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+            {task.title}
+        </a>
     </span>
 }
 
-function TaskList(props) {
-    let {containerClassName, taskListNode, callbacks} = props;
-    let taskList = taskListNode.taskList;
-
-    return (
-        <div className={containerClassName}>
-            <div className="task-list">
-                {taskList.map(
-                    (task, index) => <TaskComponent
-                        task={task}
-                        taskListNode={taskListNode}
-                        key={task.id}
-                        canMoveUp={index > 0}
-                        canMoveDown={index < taskList.length - 1}
-                        callbacks={callbacks} />)}
-            </div>
-            <div className="centered">
-                <a className="button"
-                   onClick={() => callbacks.openModal(taskListNode)}>
-                    <FontAwesome name="plus"/>
-                    Add task
-                </a>
-            </div>
-        </div>
-    );
-}
-
 function TimerComponent(props) {
-    let {task, actionList} = props;
+    let {task, taskDescription} = props;
 
-    return <div className="component timer-component">
+    return <div className="component timer-component" data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="duration">
-                    <FontAwesome name="hourglass-start" />
+                    <FontAwesome name="hourglass-start"/>
                     {formatTimeFromSeconds(task.timer)}
                 </span>
-                {actionList}
             </div>
         </div>
     </div>
 }
 
 function StopwatchComponent(props) {
-    let {task, actionList} = props;
+    let {task, taskDescription} = props;
 
-    return <div className="component stopwatch-component">
+    return <div className="component stopwatch-component" data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="stopwatch">
-                    <FontAwesome name="clock-o" />
+                    <FontAwesome name="clock-o"/>
                 </span>
-                {actionList}
             </div>
         </div>
     </div>
 }
 
 function RepeatComponent(props) {
-    let {task, actionList, callbacks} = props;
+    let {task, taskDescription, callbacks} = props;
 
-    return <div className="component repeat-component">
+    return <div className="component repeat-component"
+                data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
-                <span className="title">{task.title}</span>
+                {taskDescription}
                 <span className="repeat">
                     <FontAwesome name="repeat"/> {task.repeat}
                 </span>
-                {actionList}
             </div>
         </div>
 
@@ -260,25 +253,23 @@ function RepeatComponent(props) {
 }
 
 function TaskComponent(props) {
-    let {task, taskListNode, canMoveUp, canMoveDown, callbacks} = props;
-    let actionList = <ActionList
-        taskListNode={taskListNode}
+    let {task, taskListNode, callbacks} = props;
+    let taskDescription = <TaskDescription
         task={task}
-        canMoveUp={canMoveUp}
-        canMoveDown={canMoveDown}
+        taskListNode={taskListNode}
         callbacks={callbacks}/>;
 
     if (task.type === TASK_CHOICES.TIMER) {
-        return <TimerComponent task={task} actionList={actionList}/>
+        return <TimerComponent task={task} taskDescription={taskDescription}/>
     }
     if (task.type === TASK_CHOICES.STOPWATCH) {
-        return <StopwatchComponent task={task} actionList={actionList}/>
+        return <StopwatchComponent task={task} taskDescription={taskDescription}/>
     }
 
     return <RepeatComponent
         task={task}
-        callbacks={callbacks}
-        actionList={actionList}/>
+        taskDescription={taskDescription}
+        callbacks={callbacks}/>
 }
 
 export default class TasksComponent extends React.Component {
@@ -327,8 +318,6 @@ export default class TasksComponent extends React.Component {
 
     bindMethods() {
         this.openModal = this.openModal.bind(this);
-        this.moveTaskUp = this.moveTaskUp.bind(this);
-        this.moveTaskDown = this.moveTaskDown.bind(this);
         this.removeTask = this.removeTask.bind(this);
         this.openEditModal = this.openEditModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
@@ -336,6 +325,8 @@ export default class TasksComponent extends React.Component {
         this.addOrEditTask = this.addOrEditTask.bind(this);
         this.closeModal = this.closeModal.bind(this);
         this.transferAction = this.transferAction.bind(this);
+        this.sortList = this.sortList.bind(this);
+        this._deleteTask = this._deleteTask.bind(this);
     }
 
     getTimerProperties() {
@@ -389,7 +380,7 @@ export default class TasksComponent extends React.Component {
         this.setState({
             root: newRoot,
             exportUrl: exported,
-        }, () => window.location.hash=exported);
+        }, () => window.location.hash = exported);
     }
 
     addTask() {
@@ -463,14 +454,19 @@ export default class TasksComponent extends React.Component {
         this.changeTaskList(modifiedRoot);
     }
 
-    moveTaskUp(taskListNode, taskId) {
-        this._transformTaskList(taskListNode, taskId,
-            (listToChange, index) => swapMove(listToChange, index - 1, index));
-    }
-
-    moveTaskDown(taskListNode, taskId) {
-        this._transformTaskList(taskListNode, taskId,
-            (listToChange, index) => swapMove(listToChange, index, index + 1));
+    sortList(taskListNodeId, sortedListIds) {
+        let modifiedRoot = deepCopy(this.state.root);
+        let listToChange = findTaskList(modifiedRoot, {id: taskListNodeId});
+        let mappedTasks = {};
+        for (let task of listToChange) {
+            mappedTasks[task.id] = task;
+        }
+        for (let i = 0; i < sortedListIds.length; ++i) {
+            let taskId = sortedListIds[i];
+            let task = mappedTasks[taskId];
+            listToChange[i] = task;
+        }
+        this.changeTaskList(modifiedRoot);
     }
 
     removeTask(taskListNode, taskId) {
@@ -539,6 +535,27 @@ export default class TasksComponent extends React.Component {
         </div>
     }
 
+    _deleteTask() {
+        let taskListNode = this.state.addPlaceNode;
+        let taskId = this.state.editedTaskId;
+
+        if (confirm('Are you sure you want to delete this task?')) {
+          this.closeModal();
+          this.removeTask(taskListNode, taskId);
+        }
+    }
+
+    renderRemoveItem() {
+        if (!this.isEditMode()) {
+            return null;
+        }
+
+        return <a className="remove-task"
+                  onClick={this._deleteTask}>
+            <FontAwesome name="trash"/>
+        </a>
+    }
+
     renderStartButton() {
         if (this.state.root.taskList.length === 0) {
             return null;
@@ -574,6 +591,7 @@ export default class TasksComponent extends React.Component {
                 </select>
                 {this.renderModalSelectedOptionProperties()}
                 {this.renderValidationErrors()}
+                {this.renderRemoveItem()}
                 <a onClick={this.addOrEditTask} className="button">OK</a>
                 <a onClick={this.closeModal} className="button">Cancel</a>
             </div>
@@ -588,12 +606,11 @@ export default class TasksComponent extends React.Component {
                 <TaskList
                     containerClassName="main-tasklist"
                     taskListNode={this.state.root}
+                    data-task-list-node={this.state.root.id}
                     callbacks={{
                         openModal: this.openModal,
-                        moveTaskUp: this.moveTaskUp,
-                        moveTaskDown: this.moveTaskDown,
-                        removeTask: this.removeTask,
                         openEditModal: this.openEditModal,
+                        sortList: this.sortList,
                     }}/>
 
                 {this.renderModal()}

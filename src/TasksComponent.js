@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "react-modal";
-import DragSortableList from "react-drag-sortable";
+import Dragula from "react-dragula";
 import FontAwesome from "react-fontawesome";
 import "./TasksComponent.css";
 
@@ -145,42 +145,50 @@ function decodeToArray(data) {
     return JSON.parse(decodeURIComponent(data));
 }
 
-function TaskList(props) {
-    let {containerClassName, taskListNode, callbacks} = props;
-    let taskList = taskListNode.taskList;
-    let listToBeSorted = taskList.map(
-        (task, index) => {
-            return {
-                prevIndex: index,
-                content: <TaskComponent
+class TaskList extends React.Component {
+    render() {
+        let {containerClassName, taskListNode, callbacks} = this.props;
+        let taskList = taskListNode.taskList;
+        let listToBeSorted = taskList.map(
+            (task) => {
+                return <TaskComponent
                     task={task}
                     taskListNode={taskListNode}
                     key={task.id}
                     callbacks={callbacks}/>
-            }
-        });
-    let dragSortableList = <DragSortableList
-        items={listToBeSorted}
-        moveTransitionDuration={0.3}
-        onSort={(sortedList) => {
-            callbacks.sortList(taskListNode, sortedList)
-        }}
-        type='vertical'/>;
+            });
+        return (
+            <div className={containerClassName}>
+                <div className="task-list"
+                     ref={this.dragulaDecorator}
+                     data-task-list-node={taskListNode.id}>
+                    {listToBeSorted}
+                </div>
+                <div className="centered">
+                    <a className="button"
+                       onClick={() => callbacks.openModal(taskListNode)}>
+                        <FontAwesome name="plus"/>
+                        Add task
+                    </a>
+                </div>
+            </div>
+        );
+    }
 
-    return (
-        <div className={containerClassName}>
-            <div className="task-list">
-                {dragSortableList}
-            </div>
-            <div className="centered">
-                <a className="button"
-                   onClick={() => callbacks.openModal(taskListNode)}>
-                    <FontAwesome name="plus"/>
-                    Add task
-                </a>
-            </div>
-        </div>
-    );
+    dragulaDecorator = (componentInstance) => {
+        if (componentInstance) {
+            let options = {};
+            let drake = Dragula([componentInstance], options);
+            drake.on('drop', (el, target, source, sibling) => {
+                let taskListNodeId = target.dataset.taskListNode;
+                let sortedIds = [];
+                for (let child of target.children) {
+                    sortedIds.push(child.dataset.taskId);
+                }
+                this.props.callbacks.sortList(taskListNodeId, sortedIds);
+            });
+        }
+    }
 }
 
 function TaskDescription(props) {
@@ -195,7 +203,7 @@ function TaskDescription(props) {
 function TimerComponent(props) {
     let {task, taskDescription} = props;
 
-    return <div className="component timer-component">
+    return <div className="component timer-component" data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
                 {taskDescription}
@@ -209,9 +217,9 @@ function TimerComponent(props) {
 }
 
 function StopwatchComponent(props) {
-    let {taskDescription} = props;
+    let {task, taskDescription} = props;
 
-    return <div className="component stopwatch-component">
+    return <div className="component stopwatch-component" data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
                 {taskDescription}
@@ -226,7 +234,8 @@ function StopwatchComponent(props) {
 function RepeatComponent(props) {
     let {task, taskDescription, callbacks} = props;
 
-    return <div className="component repeat-component">
+    return <div className="component repeat-component"
+                data-task-id={task.id}>
         <div className="info-container">
             <div className="info">
                 {taskDescription}
@@ -445,13 +454,17 @@ export default class TasksComponent extends React.Component {
         this.changeTaskList(modifiedRoot);
     }
 
-    sortList(taskListNode, sortedList) {
+    sortList(taskListNodeId, sortedListIds) {
         let modifiedRoot = deepCopy(this.state.root);
-        let listToChange = findTaskList(modifiedRoot, taskListNode);
-        let referenceList = deepCopy(listToChange);
-
-        for (let i = 0; i < sortedList.length; ++i) {
-            listToChange[i] = referenceList[sortedList[i].prevIndex];
+        let listToChange = findTaskList(modifiedRoot, {id: taskListNodeId});
+        let mappedTasks = {};
+        for (let task of listToChange) {
+            mappedTasks[task.id] = task;
+        }
+        for (let i = 0; i < sortedListIds.length; ++i) {
+            let taskId = sortedListIds[i];
+            let task = mappedTasks[taskId];
+            listToChange[i] = task;
         }
         this.changeTaskList(modifiedRoot);
     }
@@ -593,6 +606,7 @@ export default class TasksComponent extends React.Component {
                 <TaskList
                     containerClassName="main-tasklist"
                     taskListNode={this.state.root}
+                    data-task-list-node={this.state.root.id}
                     callbacks={{
                         openModal: this.openModal,
                         openEditModal: this.openEditModal,

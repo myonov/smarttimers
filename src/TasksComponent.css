@@ -122,6 +122,16 @@ a {
   color: lightcoral;
 }
 
+.gu-transit {
+  border: 1px dotted lightcoral;
+  opacity: 0.75;
+}
+
+
+.gu-mirror {
+  display: none;
+}
+
 @media (max-width: 800px) {
   .container {
     width: 100%;

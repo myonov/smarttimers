@@ -165,17 +165,22 @@ function TaskComponent(props) {
         taskListNode={taskListNode}
         callbacks={callbacks}/>;
 
+    let Component;
+    let componentProperties = {
+        task: task,
+        taskDescription: taskDescription,
+    };
+
     if (task.type === definitions.TASK_CHOICES.TIMER) {
-        return <TimerComponent task={task} taskDescription={taskDescription}/>
-    }
-    if (task.type === definitions.TASK_CHOICES.STOPWATCH) {
-        return <StopwatchComponent task={task} taskDescription={taskDescription}/>
+        Component = TimerComponent;
+    } else if (task.type === definitions.TASK_CHOICES.STOPWATCH) {
+        Component = StopwatchComponent;
+    } else {
+        Component = RepeatComponent;
+        componentProperties.callbacks = callbacks;
     }
 
-    return <RepeatComponent
-        task={task}
-        taskDescription={taskDescription}
-        callbacks={callbacks}/>
+    return <Component {...componentProperties}/>
 }
 
 export default class TasksComponent extends React.Component {
@@ -301,10 +306,10 @@ export default class TasksComponent extends React.Component {
             return;
         }
 
-        if (this.state.editedTaskId === null) {
-            this.addTask();
-        } else {
+        if (this.isEditMode()) {
             this.editTask();
+        } else {
+            this.addTask();
         }
 
         this.closeModal();
@@ -368,9 +373,7 @@ export default class TasksComponent extends React.Component {
             mappedTasks[task.id] = task;
         }
         for (let i = 0; i < sortedListIds.length; ++i) {
-            let taskId = sortedListIds[i];
-            let task = mappedTasks[taskId];
-            listToChange[i] = task;
+            listToChange[i] = mappedTasks[sortedListIds[i]];
         }
         this.changeTaskList(modifiedRoot);
     }
@@ -389,14 +392,8 @@ export default class TasksComponent extends React.Component {
     }
 
     openEditModal(taskListNode, taskId) {
-        let actualTaskList;
-        if (taskListNode === null) {
-            actualTaskList = this.state.taskList;
-        } else {
-            actualTaskList = taskListNode.taskList;
-        }
-        let index = findTaskIndexById(actualTaskList, taskId);
-        let task = actualTaskList[index];
+        let index = findTaskIndexById(taskListNode.taskList, taskId);
+        let task = taskListNode.taskList[index];
 
         this.setState({
             addPlaceNode: taskListNode,
@@ -476,7 +473,6 @@ export default class TasksComponent extends React.Component {
     renderModal() {
         return <Modal
             isOpen={this.state.modalIsOpen}
-            onAfterOpen={this.modalAfterOpen}
             onRequestClose={this.closeModal}
             contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}
             style={definitions.customStyles}>

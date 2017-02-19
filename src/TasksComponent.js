@@ -2,114 +2,11 @@ import React from "react";
 import Modal from "react-modal";
 import Dragula from "react-dragula";
 import FontAwesome from "react-fontawesome";
+
+import * as utils from "./utils"
+import * as definitions from "./definitions"
+
 import "./TasksComponent.css";
-
-const ID_LENGTH = 10;
-
-const TASK_CHOICES = {
-    TIMER: 'timer',
-    STOPWATCH: 'stopwatch',
-    REPEAT: 'repeat',
-};
-
-const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
-
-const customStyles = {
-    overlay: {
-        backgroundColor: 'rgba(255, 255, 255, 0.7)'
-    },
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        transform: 'translate(-50%, -50%)',
-        border: '1px solid #bbb',
-        padding: '20px',
-        borderRadius: '0px',
-    }
-};
-
-function hasElementParentWithClass(el, className) {
-    if (el.classList && el.classList.contains(className)) return true;
-    return el.parentNode && hasElementParentWithClass(el.parentNode, className);
-}
-
-function ValidationException(message) {
-    this.message = message;
-    this.name = 'ValidationException';
-}
-
-function forceParseInt(iString) {
-    let intRegex = /^([0-9]+)$/;
-
-    let matches = intRegex.exec(iString);
-    if (matches === null) {
-        return null;
-    }
-    return parseInt(iString, 10);
-}
-
-function formatTimeFromSeconds(timeInSeconds) {
-    let hours = parseInt(timeInSeconds / (60 * 60), 10);
-    let minutes = parseInt(timeInSeconds / 60, 10) % 60;
-    let seconds = timeInSeconds % 60;
-
-    return hours + 'h' + minutes + 'm' + seconds + 's';
-}
-
-function hmsTimeStringToSeconds(hmsTimeString) {
-    let hmsRegex = /^([0-9]+h)?([0-9]+m)?([0-9]+s)?$/;
-    let factor = {
-        s: 1,
-        m: 60,
-        h: 60 * 60,
-    };
-
-    let matches = hmsRegex.exec(hmsTimeString);
-    if (matches === null) {
-        return null;
-    }
-
-    let result = 0;
-    for (let i = 1; i < matches.length; ++i) {
-        for (let j in factor) {
-            if (matches[i] && matches[i][matches[i].length - 1] === j) {
-                result += parseInt(matches[i].substring(0, matches[i].length - 1), 10) * factor[j];
-            }
-        }
-    }
-
-    return result;
-}
-
-function timeStringToSeconds(timeString) {
-    let seconds = hmsTimeStringToSeconds(timeString) || forceParseInt(timeString);
-    if (seconds === null) {
-        throw new ValidationException('Invalid time string');
-    }
-    return seconds;
-}
-
-function repeatCycles(iString) {
-    let cycles = forceParseInt(iString);
-    if (cycles === null) {
-        throw new ValidationException('Invalid number');
-    }
-    return cycles;
-}
-
-function generateId(length) {
-    let result = '';
-    for (let i = 0; i < length; ++i) {
-        result += parseInt(Math.random() * 10, 10);
-    }
-    return result;
-}
-
-function deepCopy(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
 
 function findTaskList(workNode, node) {
     let taskList = workNode.taskList;
@@ -120,7 +17,7 @@ function findTaskList(workNode, node) {
 
     for (let i = 0; i < taskList.length; ++i) {
         let task = taskList[i];
-        if (task.type === TASK_CHOICES.REPEAT) {
+        if (task.type === definitions.TASK_CHOICES.REPEAT) {
             let result = findTaskList(task, node);
             if (result !== undefined) {
                 return result;
@@ -140,14 +37,6 @@ function findTaskIndexById(taskList, id) {
 function insertIntoTaskList(startNode, node, task) {
     let taskList = findTaskList(startNode, node);
     taskList.push(task);
-}
-
-function encodeArray(arr) {
-    return encodeURIComponent(JSON.stringify(arr))
-}
-
-function decodeToArray(data) {
-    return JSON.parse(decodeURIComponent(data));
 }
 
 class TaskList extends React.Component {
@@ -184,7 +73,7 @@ class TaskList extends React.Component {
         if (componentInstance) {
             let options = {
                 moves: (el, container, handle) =>
-                    hasElementParentWithClass(handle, 'sortable-handle-container')
+                    utils.hasElementParentWithClass(handle, 'sortable-handle-container')
             };
             let drake = Dragula([componentInstance], options);
             drake.on('drop', (el, target) => {
@@ -220,7 +109,7 @@ function TimerComponent(props) {
                 {taskDescription}
                 <span className="duration">
                     <FontAwesome name="hourglass-start"/>
-                    {formatTimeFromSeconds(task.timer)}
+                    {utils.formatTimeFromSeconds(task.timer)}
                 </span>
             </div>
         </div>
@@ -276,10 +165,10 @@ function TaskComponent(props) {
         taskListNode={taskListNode}
         callbacks={callbacks}/>;
 
-    if (task.type === TASK_CHOICES.TIMER) {
+    if (task.type === definitions.TASK_CHOICES.TIMER) {
         return <TimerComponent task={task} taskDescription={taskDescription}/>
     }
-    if (task.type === TASK_CHOICES.STOPWATCH) {
+    if (task.type === definitions.TASK_CHOICES.STOPWATCH) {
         return <StopwatchComponent task={task} taskDescription={taskDescription}/>
     }
 
@@ -300,7 +189,7 @@ export default class TasksComponent extends React.Component {
             exportUrl: this.initialExport,
             modalIsOpen: false,
             editedTaskId: null,
-            modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
+            modalSelectedOption: definitions.DEFAULT_MODAL_SELECTED_OPTION,
             modalTaskName: '',
             modalTimerInput: '',
             modalRepeatInput: '',
@@ -320,14 +209,14 @@ export default class TasksComponent extends React.Component {
         let initialRoot;
         if (locationHash.length > 0) {
             try {
-                initialRoot = decodeToArray(locationHash);
+                initialRoot = utils.decodeToArray(locationHash);
             } catch (_) {
                 initialRoot = emptyRoot;
             }
         } else {
             initialRoot = emptyRoot;
         }
-        let initialExport = encodeArray(initialRoot);
+        let initialExport = utils.encodeArray(initialRoot);
 
         this.initialRoot = initialRoot;
         this.initialExport = initialExport;
@@ -349,7 +238,7 @@ export default class TasksComponent extends React.Component {
     getTimerProperties() {
         return {
             title: this.state.modalTaskName,
-            timer: timeStringToSeconds(this.state.modalTimerInput),
+            timer: utils.timeStringToSeconds(this.state.modalTimerInput),
         };
     }
 
@@ -362,7 +251,7 @@ export default class TasksComponent extends React.Component {
     getRepeatProperties() {
         let properties = {
             title: this.state.modalTaskName,
-            repeat: repeatCycles(this.state.modalRepeatInput),
+            repeat: utils.repeatCycles(this.state.modalRepeatInput),
         };
 
         if (!this.isEditMode()) {
@@ -373,10 +262,10 @@ export default class TasksComponent extends React.Component {
     }
 
     getTaskProperties() {
-        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.TIMER) {
             return this.getTimerProperties();
         }
-        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.STOPWATCH) {
             return this.getStopwatchProperties();
         }
 
@@ -385,7 +274,7 @@ export default class TasksComponent extends React.Component {
 
     createTask() {
         let task = {
-            id: generateId(ID_LENGTH),
+            id: utils.generateId(definitions.ID_LENGTH),
             type: this.state.modalSelectedOption,
         };
         let taskProperties = this.getTaskProperties();
@@ -393,7 +282,7 @@ export default class TasksComponent extends React.Component {
     }
 
     changeTaskList(newRoot) {
-        let exported = encodeArray(newRoot);
+        let exported = utils.encodeArray(newRoot);
         this.setState({
             root: newRoot,
             exportUrl: exported,
@@ -402,7 +291,7 @@ export default class TasksComponent extends React.Component {
 
     addTask() {
         let taskObj = this.createTask();
-        let modifiedRoot = deepCopy(this.state.root);
+        let modifiedRoot = utils.deepCopy(this.state.root);
         insertIntoTaskList(modifiedRoot, this.state.addPlaceNode, taskObj);
         this.changeTaskList(modifiedRoot);
     }
@@ -432,7 +321,7 @@ export default class TasksComponent extends React.Component {
         this.setState({
             addPlaceNode: null,
             modalTaskName: '',
-            modalSelectedOption: DEFAULT_MODAL_SELECTED_OPTION,
+            modalSelectedOption: definitions.DEFAULT_MODAL_SELECTED_OPTION,
             modalTimerInput: '',
             modalRepeatInput: '',
             modalIsOpen: false,
@@ -448,10 +337,10 @@ export default class TasksComponent extends React.Component {
     }
 
     renderModalSelectedOptionProperties() {
-        if (this.state.modalSelectedOption === TASK_CHOICES.STOPWATCH) {
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.STOPWATCH) {
             return null;
         }
-        if (this.state.modalSelectedOption === TASK_CHOICES.TIMER) {
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.TIMER) {
             return <input
                 placeholder="time string"
                 onChange={(e) => this.modalInputChange('modalTimerInput', e)}
@@ -464,7 +353,7 @@ export default class TasksComponent extends React.Component {
     }
 
     _transformTaskList(taskListNode, taskId, transformCallback) {
-        let modifiedRoot = deepCopy(this.state.root);
+        let modifiedRoot = utils.deepCopy(this.state.root);
         let listToChange = findTaskList(modifiedRoot, taskListNode);
         let index = findTaskIndexById(listToChange, taskId);
         transformCallback(listToChange, index);
@@ -472,7 +361,7 @@ export default class TasksComponent extends React.Component {
     }
 
     sortList(taskListNodeId, sortedListIds) {
-        let modifiedRoot = deepCopy(this.state.root);
+        let modifiedRoot = utils.deepCopy(this.state.root);
         let listToChange = findTaskList(modifiedRoot, {id: taskListNodeId});
         let mappedTasks = {};
         for (let task of listToChange) {
@@ -513,9 +402,9 @@ export default class TasksComponent extends React.Component {
             addPlaceNode: taskListNode,
             modalTaskName: task.title,
             modalSelectedOption: task.type,
-            modalTimerInput: task.type === TASK_CHOICES.TIMER ?
-                formatTimeFromSeconds(task.timer) : '',
-            modalRepeatInput: task.type === TASK_CHOICES.REPEAT ? task.repeat : '',
+            modalTimerInput: task.type === definitions.TASK_CHOICES.TIMER ?
+                utils.formatTimeFromSeconds(task.timer) : '',
+            modalRepeatInput: task.type === definitions.TASK_CHOICES.REPEAT ? task.repeat : '',
             editedTaskId: task.id,
         });
 
@@ -539,7 +428,7 @@ export default class TasksComponent extends React.Component {
     }
 
     transferAction() {
-        let data = deepCopy(this.state.root);
+        let data = utils.deepCopy(this.state.root);
         this.props.startCallback(data);
     }
 
@@ -590,7 +479,7 @@ export default class TasksComponent extends React.Component {
             onAfterOpen={this.modalAfterOpen}
             onRequestClose={this.closeModal}
             contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}
-            style={customStyles}>
+            style={definitions.customStyles}>
             <div className="modal-content">
                 <input
                     placeholder="name"
@@ -602,9 +491,9 @@ export default class TasksComponent extends React.Component {
                     onChange={(e) => this.modalInputChange('modalSelectedOption', e)}
                     disabled={this.isEditMode()}>
 
-                    <option value={TASK_CHOICES.TIMER}>Timer</option>
-                    <option value={TASK_CHOICES.STOPWATCH}>Stopwatch</option>
-                    <option value={TASK_CHOICES.REPEAT}>Repeat</option>
+                    <option value={definitions.TASK_CHOICES.TIMER}>Timer</option>
+                    <option value={definitions.TASK_CHOICES.STOPWATCH}>Stopwatch</option>
+                    <option value={definitions.TASK_CHOICES.REPEAT}>Repeat</option>
                 </select>
                 {this.renderModalSelectedOptionProperties()}
                 {this.renderValidationErrors()}

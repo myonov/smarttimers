@@ -90,72 +90,79 @@ class TaskList extends React.Component {
 
 function TaskDescription(props) {
     let {callbacks, taskListNode, task} = props;
-    return <span className="title">
-        <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
-            {task.title}
-        </a>
-    </span>
+    return (
+        <span className="title">
+            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+                {task.title}
+            </a>
+        </span>
+    );
 }
 
 function TimerComponent(props) {
     let {task, taskDescription} = props;
 
-    return <div className="component timer-component" data-task-id={task.id}>
-        <div className="sortable-handle-container">
-            <FontAwesome name="plus-square-o" className="sortable-handle"/>
-        </div>
-        <div className="info-container">
-            <div className="info">
-                {taskDescription}
-                <span className="duration">
-                    <FontAwesome name="hourglass-start"/>
-                    {utils.formatTimeFromSeconds(task.timer)}
-                </span>
+    return (
+        <div className="component timer-component" data-task-id={task.id}>
+            <div className="sortable-handle-container">
+                <FontAwesome name="plus-square-o" className="sortable-handle"/>
+            </div>
+            <div className="info-container">
+                <div className="info">
+                    {taskDescription}
+                    <span className="duration">
+                        <FontAwesome name="hourglass-start"/>
+                        {utils.formatTimeFromSeconds(task.timer)}
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
+    );
 }
 
 function StopwatchComponent(props) {
     let {task, taskDescription} = props;
 
-    return <div className="component stopwatch-component" data-task-id={task.id}>
-        <div className="sortable-handle-container">
-            <FontAwesome name="plus-square-o" className="sortable-handle"/>
-        </div>
-        <div className="info-container">
-            <div className="info">
-                {taskDescription}
-                <span className="stopwatch">
-                    <FontAwesome name="clock-o"/>
-                </span>
+    return (
+        <div className="component stopwatch-component" data-task-id={task.id}>
+            <div className="sortable-handle-container">
+                <FontAwesome name="plus-square-o" className="sortable-handle"/>
+            </div>
+            <div className="info-container">
+                <div className="info">
+                    {taskDescription}
+                    <span className="stopwatch">
+                        <FontAwesome name="clock-o"/>
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
+    );
 }
 
 function RepeatComponent(props) {
     let {task, taskDescription, callbacks} = props;
 
-    return <div className="component repeat-component"
-                data-task-id={task.id}>
-        <div className="sortable-handle-container">
-            <FontAwesome name="plus-square-o" className="sortable-handle"/>
-        </div>
-        <div className="info-container">
-            <div className="info">
-                {taskDescription}
-                <span className="repeat">
-                    <FontAwesome name="repeat"/> {task.repeat}
-                </span>
+    return (
+        <div className="component repeat-component"
+             data-task-id={task.id}>
+            <div className="sortable-handle-container">
+                <FontAwesome name="plus-square-o" className="sortable-handle"/>
             </div>
+            <div className="info-container">
+                <div className="info">
+                    {taskDescription}
+                    <span className="repeat">
+                        <FontAwesome name="repeat"/> {task.repeat}
+                    </span>
+                </div>
+            </div>
+            <TaskList
+                containerName="repeat-container"
+                callbacks={callbacks}
+                taskListNode={task}/>
         </div>
-
-        <TaskList
-            containerName="repeat-container"
-            callbacks={callbacks}
-            taskListNode={task}/>
-    </div>
+    );
 }
 
 function TaskComponent(props) {
@@ -341,22 +348,6 @@ export default class TasksComponent extends React.Component {
         this.setState(newState);
     }
 
-    renderModalSelectedOptionProperties() {
-        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.STOPWATCH) {
-            return null;
-        }
-        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.TIMER) {
-            return <input
-                placeholder="time string"
-                onChange={(e) => this.modalInputChange('modalTimerInput', e)}
-                value={this.state.modalTimerInput}/>
-        }
-        return <input
-            placeholder="repeats"
-            onChange={(e) => this.modalInputChange('modalRepeatInput', e)}
-            value={this.state.modalRepeatInput}/>
-    }
-
     _transformTaskList(taskListNode, taskId, transformCallback) {
         let modifiedRoot = utils.deepCopy(this.state.root);
         let listToChange = findTaskList(modifiedRoot, taskListNode);
@@ -429,23 +420,43 @@ export default class TasksComponent extends React.Component {
         this.props.startCallback(data);
     }
 
-    renderValidationErrors() {
-        if (!this.state.validationErrorMessage) {
-            return null;
-        }
-        return <div className="error-message">
-            {this.state.validationErrorMessage}
-        </div>
-    }
-
     _deleteTask() {
         let taskListNode = this.state.addPlaceNode;
         let taskId = this.state.editedTaskId;
 
         if (confirm('Are you sure you want to delete this task?')) {
-          this.closeModal();
-          this.removeTask(taskListNode, taskId);
+            this.closeModal();
+            this.removeTask(taskListNode, taskId);
         }
+    }
+
+    renderValidationErrors() {
+        if (!this.state.validationErrorMessage) {
+            return null;
+        }
+        return (
+            <div className="error-message">
+                {this.state.validationErrorMessage}
+            </div>
+        );
+    }
+
+    renderModalSelectedOptionProperties() {
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.STOPWATCH) {
+            return null;
+        }
+        if (this.state.modalSelectedOption === definitions.TASK_CHOICES.TIMER) {
+            return (
+                <input placeholder="time string"
+                       onChange={(e) => this.modalInputChange('modalTimerInput', e)}
+                       value={this.state.modalTimerInput}/>
+            );
+        }
+        return (
+            <input placeholder="repeats"
+                   onChange={(e) => this.modalInputChange('modalRepeatInput', e)}
+                   value={this.state.modalRepeatInput}/>
+        );
     }
 
     renderRemoveItem() {
@@ -453,51 +464,57 @@ export default class TasksComponent extends React.Component {
             return null;
         }
 
-        return <a className="remove-task"
-                  onClick={this._deleteTask}>
-            <FontAwesome name="trash"/>
-        </a>
+        return (
+            <a className="remove-task"
+               onClick={this._deleteTask}>
+                <FontAwesome name="trash"/>
+            </a>
+        );
     }
 
     renderStartButton() {
         if (this.state.root.taskList.length === 0) {
             return null;
         }
-        return <div className="centered start-container">
-            <a className="button" onClick={this.transferAction}>
-                <FontAwesome name="play"/>Start
-            </a>
-        </div>
+        return (
+            <div className="centered start-container">
+                <a className="button" onClick={this.transferAction}>
+                    <FontAwesome name="play"/>Start
+                </a>
+            </div>
+        );
     }
 
     renderModal() {
-        return <Modal
-            isOpen={this.state.modalIsOpen}
-            onRequestClose={this.closeModal}
-            contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}
-            style={definitions.customStyles}>
-            <div className="modal-content">
-                <input
-                    placeholder="name"
-                    autoFocus="autoFocus"
-                    onChange={(e) => this.modalInputChange('modalTaskName', e)}
-                    value={this.state.modalTaskName}/>
-                <select
-                    value={this.state.modalSelectedOption}
-                    onChange={(e) => this.modalInputChange('modalSelectedOption', e)}
-                    disabled={this.isEditMode()}>
+        return (
+            <Modal
+                isOpen={this.state.modalIsOpen}
+                onRequestClose={this.closeModal}
+                contentLabel={this.isEditMode() ? 'Edit task' : 'Add task'}
+                style={definitions.customStyles}>
+                <div className="modal-content">
+                    <input
+                        placeholder="name"
+                        autoFocus="autoFocus"
+                        onChange={(e) => this.modalInputChange('modalTaskName', e)}
+                        value={this.state.modalTaskName}/>
+                    <select
+                        value={this.state.modalSelectedOption}
+                        onChange={(e) => this.modalInputChange('modalSelectedOption', e)}
+                        disabled={this.isEditMode()}>
 
-                    <option value={definitions.TASK_CHOICES.TIMER}>Timer</option>
-                    <option value={definitions.TASK_CHOICES.STOPWATCH}>Stopwatch</option>
-                    <option value={definitions.TASK_CHOICES.REPEAT}>Repeat</option>
-                </select>
-                {this.renderModalSelectedOptionProperties()}
-                {this.renderValidationErrors()}
-                {this.renderRemoveItem()}
-                <a onClick={this.addOrEditTask} className="button">OK</a>
-                <a onClick={this.closeModal} className="button">Cancel</a>
-            </div>
-        </Modal>
+                        <option value={definitions.TASK_CHOICES.TIMER}>Timer</option>
+                        <option value={definitions.TASK_CHOICES.STOPWATCH}>Stopwatch</option>
+                        <option value={definitions.TASK_CHOICES.REPEAT}>Repeat</option>
+                    </select>
+                    {this.renderModalSelectedOptionProperties()}
+                    {this.renderValidationErrors()}
+                    {this.renderRemoveItem()}
+                    <a onClick={this.addOrEditTask} className="button">OK</a>
+                    <a onClick={this.closeModal} className="button">Cancel</a>
+                </div>
+            </Modal>
+        );
     }
 
     render() {

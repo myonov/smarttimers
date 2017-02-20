@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css'
 import TasksComponent from './TasksComponent';
-import RunningComponent from './RunningComponent';
+import DisplayComponent from './DisplayComponent';
 
 const Components = {
     TASK_LIST: 1,
@@ -29,7 +29,7 @@ class App extends React.Component {
         if (this.state.activeComponent === Components.TASK_LIST) {
             return <TasksComponent startCallback={this.changeActiveComponent}/>;
         }
-        return <RunningComponent timersData={this.state.timersData}/>
+        return <DisplayComponent timersData={this.state.timersData}/>
     }
 }
 

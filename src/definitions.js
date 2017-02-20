@@ -23,3 +23,4 @@ export const TASK_CHOICES = {
 };
 
 export const DEFAULT_MODAL_SELECTED_OPTION = TASK_CHOICES.TIMER;
+export const TICKS_PER_SEC = 50;

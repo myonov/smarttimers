@@ -5,7 +5,7 @@ import DisplayComponent from './DisplayComponent';
 
 const Components = {
     TASK_LIST: 1,
-    RUNNING: 2,
+    DISPLAY: 2,
 };
 
 class App extends React.Component {

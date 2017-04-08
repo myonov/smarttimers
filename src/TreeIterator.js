@@ -61,12 +61,14 @@ export class TreeIterator {
                 return nextChild;
             }
             return this.descend(nextChild);
-        } else {
-            if (this.hasNextIteration(v)) {
-                this.nextIteration(v);
-                return this.descend(v);
-            }
         }
+
+        if (this.hasNextIteration(v)) {
+            this.nextIteration(v);
+            return this.descend(v);
+        }
+
+        return null;
     }
 
     ascend(v) {

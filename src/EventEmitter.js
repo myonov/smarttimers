@@ -19,6 +19,7 @@ export class EventEmitter {
     }
 
     fire(event) {
+        console.log(event, arguments);
         if (!this.eventMap[event]) {
             return;
         }

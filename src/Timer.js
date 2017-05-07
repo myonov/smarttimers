@@ -9,12 +9,12 @@ const RUNNING_STATE = {
 };
 
 export class Timer extends EventEmitter {
-    constructor(seconds, ticksPerSec=definitions.TICKS_PER_SEC) {
+    constructor(seconds, ticksPerSec = definitions.TICKS_PER_SEC) {
         super();
         this.seconds = seconds;
         this.ticksPerSec = ticksPerSec;
         this.ticks = 0;
-        this.elapsedTickSinceStart = 0;
+        this.elapsedTicksSinceStart = 0;
         this.state = RUNNING_STATE.INITIALIZED;
     }
 
@@ -29,25 +29,38 @@ export class Timer extends EventEmitter {
     stop() {
         clearInterval(this.tickTimer);
         this.state = RUNNING_STATE.FINISHED;
-        this.fire('stop');
+        this.fire('stop', {
+            runningTime: this._computeSeconds(this.ticks),
+            pausedTime: this._computeSeconds(this._pauseTicks()),
+        });
     }
 
     togglePause() {
         if (this.state === RUNNING_STATE.PAUSED) {
             this.state = RUNNING_STATE.RUNNING;
+            this.fire('pauseOff')
         } else if (this.state === RUNNING_STATE.RUNNING) {
             this.state = RUNNING_STATE.PAUSED;
+            this.fire('pauseOn');
         } else {
             throw 'Invalid running state';
         }
     }
 
-    _computeSeconds() {
-        return this.ticks / this.ticksPerSec;
+    _pauseTicks() {
+        return this.elapsedTicksSinceStart - this.ticks;
+    }
+
+    _computeSeconds(ticks) {
+        return Math.floor(ticks / this.ticksPerSec);
     }
 
     _checkTickSecond() {
         return this.ticks % this.ticksPerSec === 0;
+    }
+
+    _checkPauseTickSecond() {
+        return this._pauseTicks() % this.ticksPerSec === 0;
     }
 
     _checkFinished() {
@@ -55,17 +68,25 @@ export class Timer extends EventEmitter {
     }
 
     tick() {
-        this.elapsedTickSinceStart++;
+        this.elapsedTicksSinceStart++;
         if (this.state === RUNNING_STATE.RUNNING) {
             this.ticks++;
             this.fire('tick', this.ticks);
             if (this._checkTickSecond()) {
-                this.fire('tickSecond', this.ticks / this.ticksPerSec);
-                if(this._checkFinished()) {
+                this.fire('tickSecond', this._computeSeconds(this.ticks));
+                if (this._checkFinished()) {
                     this.stop();
-                    return;
                 }
+            }
+        } else {
+            this.fire('pauseTick', this._pauseTicks());
+            if (this._checkPauseTickSecond()) {
+                this.fire('pauseTickSecond', this._computeSeconds(this._pauseTicks()));
             }
         }
     }
 }
+
+Timer.events = [
+    'start', 'pauseOn', 'pauseOff', 'stop', 'tickSecond', 'pauseTick', 'pauseTickSecond'
+];

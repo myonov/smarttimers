@@ -28,8 +28,9 @@ export class TaskManager extends EventEmitter {
         if (event === 'stop') {
             return this.stopTaskCallback.bind(this);
         }
-        return () => {
-        };
+        return function () {
+
+        }
     }
 
     getCallback(event) {
@@ -39,8 +40,9 @@ export class TaskManager extends EventEmitter {
 
         // return function instead of an arrow-function because of arguments
         return function () {
-            passedCallback(arguments);
-            taskManagerCallback(arguments);
+            let callbackArguments = Array.prototype.slice.call(arguments, 0);
+            passedCallback.apply(this, callbackArguments);
+            taskManagerCallback.apply(this, callbackArguments);
         };
     }
 

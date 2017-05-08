@@ -76,13 +76,55 @@ export default class DisplayComponent extends React.Component {
         </h3>
     }
 
+    renderTimerDisplay() {
+        if (this.state.currentTask === null) {
+            return null;
+        }
+        if (this.state.currentTask.type === 'timer') {
+            let timeLeft = this.state.currentTask.timer - this.state.seconds;
+            return <div>
+                <span>Time left: {timeLeft}</span>
+            </div>
+        }
+        return <div>
+            <span>Passed: {this.state.seconds} seconds</span>
+        </div>
+    }
+
+    renderNextTask() {
+        if (this.state.nextTask === null) {
+            return <div className="next-task">
+                No next task
+            </div>
+        }
+        return <div className="next-task">
+            <h4>Next task: {this.state.nextTask.title}</h4>
+            <div>
+                <div>
+                    Type: {this.state.nextTask.type}
+                </div>
+                <div>
+                    Duration: {this.state.nextTask.timer ? this.state.nextTask.timer : '-'}
+                </div>
+            </div>
+        </div>
+    }
+
+    renderTimeControls() {
+        return null;
+    }
+
+    renderFinishedTasks() {
+        return null;
+    }
+
     render() {
         return <div>
             {this.renderTitle()}
-
-            <div>
-                <span>Passed: {this.state.seconds} seconds</span>
-            </div>
+            {this.renderTimerDisplay()}
+            {this.renderNextTask()}
+            {this.renderTimeControls()}
+            {this.renderFinishedTasks()}
         </div>
     }
 }

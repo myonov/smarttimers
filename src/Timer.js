@@ -64,7 +64,7 @@ export class Timer extends EventEmitter {
     }
 
     _checkFinished() {
-        return this.seconds && this._computeSeconds() >= this.seconds;
+        return this.seconds && this._computeSeconds(this.ticks) >= this.seconds;
     }
 
     tick() {

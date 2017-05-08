@@ -10,14 +10,15 @@ function getTimerFromTask(task) {
 }
 
 export class TaskManager extends EventEmitter {
-    constructor(timersData, callbacks) {
+    constructor(timersData, timerCallbacks) {
         super();
         this.timersData = timersData;
         this.treeIterator = new TreeIterator(timersData);
         this.currentTask = null;
         this.currentTaskTimer = null;
         this.nextTask = null;
-        this.callbacks = callbacks || {};
+        this.timerCallbacks = timerCallbacks || {};
+        this.isFinished = false;
     }
 
     getTaskManagerCallback(event) {
@@ -33,7 +34,7 @@ export class TaskManager extends EventEmitter {
 
     getCallback(event) {
         let taskManagerCallback = this.getTaskManagerCallback(event);
-        let passedCallback = this.callbacks[event] || (() => {
+        let passedCallback = this.timerCallbacks[event] || (() => {
             });
 
         // return function instead of an arrow-function because of arguments
@@ -61,7 +62,7 @@ export class TaskManager extends EventEmitter {
 
     stopTaskCallback(taskDuration) {
         this.fire('taskManager:stopTask', taskDuration);
-        if (this.nextTask === null) {
+        if (this.nextTask === null || this.isFinished) {
             this.fire('taskManager:stop');
             return;
         }
@@ -84,6 +85,13 @@ export class TaskManager extends EventEmitter {
     }
 
     stop() {
+        // this method stops the current task
+        this.currentTaskTimer.stop();
+    }
+
+    finish() {
+        // this method finishes the TaskManager immediately
+        this.isFinished = true;
         this.currentTaskTimer.stop();
     }
 

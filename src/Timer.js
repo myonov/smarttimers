@@ -43,7 +43,7 @@ export class Timer extends EventEmitter {
             this.state = RUNNING_STATE.PAUSED;
             this.fire('pauseOn');
         } else {
-            throw 'Invalid running state';
+            throw new Error('Invalid running state');
         }
     }
 

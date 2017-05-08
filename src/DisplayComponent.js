@@ -2,6 +2,7 @@ import React from "react";
 import FontAwesome from "react-fontawesome";
 
 import {TaskManager} from './TaskManager';
+import {deepCopy} from './utils';
 
 import "./DisplayComponent.css"
 
@@ -24,6 +25,7 @@ export default class DisplayComponent extends React.Component {
             nextTask: null,
             seconds: 0,
             pauseSeconds: 0,
+            finishedTasks: [],
         };
     }
 
@@ -31,6 +33,7 @@ export default class DisplayComponent extends React.Component {
         this.tickSecondHandler = this.tickSecondHandler.bind(this);
         this.pauseTickSecondHandler = this.pauseTickSecondHandler.bind(this);
         this.startTaskHandler = this.startTaskHandler.bind(this);
+        this.stopTaskHandler = this.stopTaskHandler.bind(this);
     }
 
     startTaskHandler(currentTask, nextTask) {
@@ -40,6 +43,17 @@ export default class DisplayComponent extends React.Component {
             currentTask: currentTask,
             nextTask: nextTask,
         });
+    }
+
+    stopTaskHandler(timeStats) {
+        let finishedTasksCopy = deepCopy(this.state.finishedTasks);
+        finishedTasksCopy.push({
+            task: this.state.currentTask,
+            timeStats: timeStats,
+        });
+        this.setState({
+            finishedTasks: finishedTasksCopy,
+        })
     }
 
     tickSecondHandler(seconds) {
@@ -56,11 +70,13 @@ export default class DisplayComponent extends React.Component {
 
     componentDidMount() {
         this.taskManager.subscribe('taskManager:startTask', this.startTaskHandler);
+        this.taskManager.subscribe('taskManager:stopTask', this.stopTaskHandler);
         this.taskManager.start();
     }
 
     componentWillUnmount() {
         this.taskManager.unsubscribe('taskManager:startTask', this.startTaskHandler);
+        this.taskManager.unsubscribe('taskManager:stopTask', this.stopTaskHandler);
     }
 
     renderTitle() {
@@ -110,20 +126,41 @@ export default class DisplayComponent extends React.Component {
         </div>
     }
 
-    renderTimeControls() {
-        return null;
+    renderTimerControls() {
+        return <div className="timer-controls">
+            <a onClick={() => this.taskManager.togglePause()}>
+                Toggle Pause
+            </a>
+            <a onClick={() => this.taskManager.stop()}>
+                Stop
+            </a>
+            <a onClick={() => this.taskManager.finish()}>
+                Finish
+            </a>
+        </div>
     }
 
     renderFinishedTasks() {
-        return null;
+        return <div className="finished-tasks">
+            <ol>
+                {this.state.finishedTasks.map((item) => {
+                    return <li key={item.task.id}>
+                        Task name: {item.task.title}<br />
+                        Type: {item.task.type}<br />
+                        Running time: {item.timeStats.runningTime};
+                        Paused time: {item.timeStats.pausedTime}
+                    </li>
+                })}
+            </ol>
+        </div>
     }
 
     render() {
         return <div>
             {this.renderTitle()}
             {this.renderTimerDisplay()}
+            {this.renderTimerControls()}
             {this.renderNextTask()}
-            {this.renderTimeControls()}
             {this.renderFinishedTasks()}
         </div>
     }

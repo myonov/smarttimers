@@ -40,6 +40,7 @@ export default class DisplayComponent extends React.Component {
         this.pauseTickSecondHandler = this.pauseTickSecondHandler.bind(this);
         this.startTaskHandler = this.startTaskHandler.bind(this);
         this.stopTaskHandler = this.stopTaskHandler.bind(this);
+        this.stopHandler = this.stopHandler.bind(this);
     }
 
     startTaskHandler(currentTask, nextTask) {
@@ -101,15 +102,22 @@ export default class DisplayComponent extends React.Component {
         })
     }
 
+    stopHandler() {
+        let copyOfFinishedTasks = deepCopy(this.state.finishedTasks);
+        this.props.finishCallback(this.props.nextState, copyOfFinishedTasks);
+    }
+
     componentDidMount() {
         this.taskManager.subscribe('taskManager:startTask', this.startTaskHandler);
         this.taskManager.subscribe('taskManager:stopTask', this.stopTaskHandler);
+        this.taskManager.subscribe('taskManager:stop', this.stopHandler);
         this.taskManager.start();
     }
 
     componentWillUnmount() {
         this.taskManager.unsubscribe('taskManager:startTask', this.startTaskHandler);
         this.taskManager.unsubscribe('taskManager:stopTask', this.stopTaskHandler);
+        this.taskManager.unsubscribe('taskManager:stop', this.stopHandler);
     }
 
     renderTitle() {

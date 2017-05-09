@@ -417,7 +417,7 @@ export default class TasksComponent extends React.Component {
 
     transferAction() {
         let data = utils.deepCopy(this.state.root);
-        this.props.startCallback(data);
+        this.props.startCallback(this.props.nextState, data);
     }
 
     _deleteTask() {

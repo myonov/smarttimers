@@ -1,9 +1,11 @@
-import {EventEmitter} from "./EventEmitter";
-import {TreeIterator} from "./TreeIterator";
-import {Timer} from "./Timer";
+import {EventEmitter} from './EventEmitter';
+import {TreeIterator} from './TreeIterator';
+import {Timer} from './Timer';
+
+import * as definitions from './definitions';
 
 function getTimerFromTask(task) {
-    if (task.type === 'stopwatch') {
+    if (task.type === definitions.TASK_CHOICES.STOPWATCH) {
         return new Timer();
     }
     return new Timer(task.timer);

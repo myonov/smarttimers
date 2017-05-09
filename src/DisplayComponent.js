@@ -1,10 +1,16 @@
-import React from "react";
-import FontAwesome from "react-fontawesome";
+import React from 'react';
+import FontAwesome from 'react-fontawesome';
 
 import {TaskManager} from './TaskManager';
 import {deepCopy} from './utils';
 
-import "./DisplayComponent.css"
+import * as definitions from './definitions';
+
+import './DisplayComponent.css';
+
+import stop from '../resources/stop.wav';
+import tick from '../resources/tick.wav';
+
 
 export default class DisplayComponent extends React.Component {
     constructor(props) {
@@ -42,11 +48,34 @@ export default class DisplayComponent extends React.Component {
             pauseSeconds: 0,
             currentTask: currentTask,
             nextTask: nextTask,
+        }, () => {
+            if (this.checkLimitThreshold()) {
+                this.audioCallback('tick');
+            }
         });
+    }
+
+    checkLimitThreshold() {
+        let currentTask = this.state.currentTask;
+        return currentTask !== null &&
+            currentTask.type === definitions.TASK_CHOICES.TIMER &&
+            currentTask.timer - this.state.seconds <= definitions.LIMIT_SECONDS_THRESHOLD;
+    }
+
+    audioCallback(event) {
+        const resources = {
+            'tick': tick,
+            'stop': stop,
+        };
+        if (definitions.PLAY_AUDIO) {
+            let audio = new Audio(resources[event]);
+            audio.play()
+        }
     }
 
     stopTaskHandler(timeStats) {
         let finishedTasksCopy = deepCopy(this.state.finishedTasks);
+        this.audioCallback('stop');
         finishedTasksCopy.push({
             task: this.state.currentTask,
             timeStats: timeStats,
@@ -59,7 +88,11 @@ export default class DisplayComponent extends React.Component {
     tickSecondHandler(seconds) {
         this.setState({
             seconds: seconds,
-        })
+        }, () => {
+            if (this.checkLimitThreshold()) {
+                this.audioCallback('tick');
+            }
+        });
     }
 
     pauseTickSecondHandler(seconds) {
@@ -96,7 +129,7 @@ export default class DisplayComponent extends React.Component {
         if (this.state.currentTask === null) {
             return null;
         }
-        if (this.state.currentTask.type === 'timer') {
+        if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
             let timeLeft = this.state.currentTask.timer - this.state.seconds;
             return <div>
                 <span>Time left: {timeLeft}</span>
@@ -144,7 +177,7 @@ export default class DisplayComponent extends React.Component {
         return <div className="finished-tasks">
             <ol>
                 {this.state.finishedTasks.map((item) => {
-                    return <li key={item.task.id}>
+                    return <li>
                         Task name: {item.task.title}<br />
                         Type: {item.task.type}<br />
                         Running time: {item.timeStats.runningTime};

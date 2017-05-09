@@ -1,5 +1,5 @@
-import {EventEmitter} from "./EventEmitter";
-import * as definitions from "./definitions"
+import {EventEmitter} from './EventEmitter';
+import * as definitions from './definitions';
 
 const RUNNING_STATE = {
     INITIALIZED: 0,

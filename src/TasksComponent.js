@@ -1,12 +1,12 @@
-import React from "react";
-import Modal from "react-modal";
-import Dragula from "react-dragula";
-import FontAwesome from "react-fontawesome";
+import React from 'react';
+import Modal from 'react-modal';
+import Dragula from 'react-dragula';
+import FontAwesome from 'react-fontawesome';
 
-import * as utils from "./utils"
-import * as definitions from "./definitions"
+import * as utils from './utils'
+import * as definitions from './definitions'
 
-import "./TasksComponent.css";
+import './TasksComponent.css';
 
 function findTaskList(workNode, node) {
     let taskList = workNode.taskList;

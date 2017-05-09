@@ -81,6 +81,7 @@ export default class DisplayComponent extends React.Component {
             task: this.state.currentTask,
             timeStats: timeStats,
         });
+        this._finishedTasksCopy = finishedTasksCopy;
         this.setState({
             finishedTasks: finishedTasksCopy,
         })
@@ -103,7 +104,8 @@ export default class DisplayComponent extends React.Component {
     }
 
     stopHandler() {
-        let copyOfFinishedTasks = deepCopy(this.state.finishedTasks);
+        // use reference to finishedTasks because React batches state updates from events
+        let copyOfFinishedTasks = deepCopy(this._finishedTasksCopy);
         this.props.finishCallback(this.props.nextState, copyOfFinishedTasks);
     }
 

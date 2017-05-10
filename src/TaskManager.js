@@ -100,6 +100,7 @@ export class TaskManager extends EventEmitter {
     }
 
     togglePause() {
+        this.fire('taskManager:togglePause');
         this.currentTaskTimer.togglePause();
     }
 }

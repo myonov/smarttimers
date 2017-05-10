@@ -2,7 +2,7 @@ import React from 'react';
 import FontAwesome from 'react-fontawesome';
 
 import {TaskManager} from './TaskManager';
-import {deepCopy} from './utils';
+import {deepCopy, formatZeroPadSeconds} from './utils';
 
 import * as definitions from './definitions';
 
@@ -20,7 +20,8 @@ export default class DisplayComponent extends React.Component {
 
         let timerCallbacks = {
             tickSecond: this.tickSecondHandler,
-            pauseTickSeconds: this.pauseTickSecondHandler,
+            pauseTickSecond: this.pauseTickSecondHandler,
+            togglePause: this.togglePauseHandler,
         };
 
         this.taskManager = new TaskManager(props.timersData, timerCallbacks);
@@ -32,6 +33,7 @@ export default class DisplayComponent extends React.Component {
             seconds: 0,
             pauseSeconds: 0,
             finishedTasks: [],
+            paused: false,
         };
     }
 
@@ -41,6 +43,7 @@ export default class DisplayComponent extends React.Component {
         this.startTaskHandler = this.startTaskHandler.bind(this);
         this.stopTaskHandler = this.stopTaskHandler.bind(this);
         this.stopHandler = this.stopHandler.bind(this);
+        this.togglePauseHandler = this.togglePauseHandler.bind(this);
     }
 
     startTaskHandler(currentTask, nextTask) {
@@ -49,6 +52,7 @@ export default class DisplayComponent extends React.Component {
             pauseSeconds: 0,
             currentTask: currentTask,
             nextTask: nextTask,
+            paused: false,
         }, () => {
             if (this.checkLimitThreshold()) {
                 this.audioCallback('tick');
@@ -75,17 +79,25 @@ export default class DisplayComponent extends React.Component {
     }
 
     stopTaskHandler(timeStats) {
-        let finishedTasksCopy = deepCopy(this.state.finishedTasks);
         this.audioCallback('stop');
-        finishedTasksCopy.push({
+
+        let newFinishedTasks = [{
             task: this.state.currentTask,
             timeStats: timeStats,
-        });
-        this._finishedTasksCopy = finishedTasksCopy;
+        }].concat(deepCopy(this.state.finishedTasks));
+
+        this._finishedTasks = newFinishedTasks;
         this.setState({
-            finishedTasks: finishedTasksCopy,
+            finishedTasks: newFinishedTasks,
         })
     }
+
+    togglePauseHandler() {
+        this.setState({
+            paused: !this.state.paused,
+        });
+    }
+
 
     tickSecondHandler(seconds) {
         this.setState({
@@ -99,13 +111,13 @@ export default class DisplayComponent extends React.Component {
 
     pauseTickSecondHandler(seconds) {
         this.setState({
-            seconds: seconds,
+            pauseSeconds: seconds,
         })
     }
 
     stopHandler() {
         // use reference to finishedTasks because React batches state updates from events
-        let copyOfFinishedTasks = deepCopy(this._finishedTasksCopy);
+        let copyOfFinishedTasks = deepCopy(this._finishedTasks);
         this.props.finishCallback(this.props.nextState, copyOfFinishedTasks);
     }
 
@@ -113,6 +125,7 @@ export default class DisplayComponent extends React.Component {
         this.taskManager.subscribe('taskManager:startTask', this.startTaskHandler);
         this.taskManager.subscribe('taskManager:stopTask', this.stopTaskHandler);
         this.taskManager.subscribe('taskManager:stop', this.stopHandler);
+        this.taskManager.subscribe('taskManager:togglePause', this.togglePauseHandler);
         this.taskManager.start();
     }
 
@@ -120,6 +133,7 @@ export default class DisplayComponent extends React.Component {
         this.taskManager.unsubscribe('taskManager:startTask', this.startTaskHandler);
         this.taskManager.unsubscribe('taskManager:stopTask', this.stopTaskHandler);
         this.taskManager.unsubscribe('taskManager:stop', this.stopHandler);
+        this.taskManager.unsubscribe('taskManager:togglePause', this.togglePauseHandler);
     }
 
     renderTitle() {
@@ -139,14 +153,19 @@ export default class DisplayComponent extends React.Component {
         if (this.state.currentTask === null) {
             return null;
         }
-        if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
-            let timeLeft = this.state.currentTask.timer - this.state.seconds;
-            return <div>
-                <span>Time left: {timeLeft}</span>
-            </div>
+        let displayedSeconds;
+        let timerDisplayClasses = ['timer-display'];
+        if (this.state.paused) {
+            timerDisplayClasses.push('paused');
+            displayedSeconds = this.state.pauseSeconds;
+        } else if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
+            displayedSeconds = this.state.currentTask.timer - this.state.seconds;
+        } else {
+            displayedSeconds = this.state.seconds;
         }
-        return <div>
-            <span>Passed: {this.state.seconds} seconds</span>
+
+        return <div className={timerDisplayClasses.join(' ')}>
+            <h3>{formatZeroPadSeconds(displayedSeconds)}</h3>
         </div>
     }
 
@@ -170,15 +189,17 @@ export default class DisplayComponent extends React.Component {
     }
 
     renderTimerControls() {
+        let pauseGlyphName = this.state.paused ? 'play' : 'pause';
+
         return <div className="timer-controls">
             <a onClick={() => this.taskManager.togglePause()}>
-                Toggle Pause
-            </a>
+                <FontAwesome name={pauseGlyphName}/>
+            </a> &nbsp;
             <a onClick={() => this.taskManager.stop()}>
-                Stop
-            </a>
+                <FontAwesome name="step-forward"/>
+            </a> &nbsp;
             <a onClick={() => this.taskManager.finish()}>
-                Finish
+                <FontAwesome name="stop"/>
             </a>
         </div>
     }
@@ -200,9 +221,9 @@ export default class DisplayComponent extends React.Component {
 
     render() {
         return <div>
-            {this.renderTitle()}
             {this.renderTimerDisplay()}
             {this.renderTimerControls()}
+            {this.renderTitle()}
             {this.renderNextTask()}
             {this.renderFinishedTasks()}
         </div>

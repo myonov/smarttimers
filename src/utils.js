@@ -86,3 +86,18 @@ export function decodeToArray(data) {
 export function deepCopy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
+
+function zeroPad(num) {
+    if (num < 10) {
+        return '0' + num;
+    }
+    return '' + num;
+}
+
+export function formatZeroPadSeconds(timeInSeconds) {
+    let hours = parseInt(timeInSeconds / (60 * 60), 10);
+    let minutes = parseInt(timeInSeconds / 60, 10) % 60;
+    let seconds = timeInSeconds % 60;
+
+    return zeroPad(hours) + ':' + zeroPad(minutes) + ':' + zeroPad(seconds);
+}

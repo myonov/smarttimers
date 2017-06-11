@@ -11,6 +11,10 @@ import './DisplayComponent.css';
 import stop from '../resources/stop.wav';
 import tick from '../resources/tick.wav';
 
+const AUDIO_MAP = {
+    'tick': new Audio(tick),
+    'stop': new Audio(stop),
+};
 
 export default class DisplayComponent extends React.Component {
     constructor(props) {
@@ -68,12 +72,8 @@ export default class DisplayComponent extends React.Component {
     }
 
     audioCallback(event) {
-        const resources = {
-            'tick': tick,
-            'stop': stop,
-        };
         if (definitions.PLAY_AUDIO) {
-            let audio = new Audio(resources[event]);
+            let audio = AUDIO_MAP[event];
             audio.play()
         }
     }
@@ -165,7 +165,8 @@ export default class DisplayComponent extends React.Component {
         }
 
         return <div className={timerDisplayClasses.join(' ')}>
-            <h3>{formatZeroPadSeconds(displayedSeconds)}</h3>
+            <div className="time">{formatZeroPadSeconds(displayedSeconds)}</div>
+            {this.renderTimerControls()}
         </div>
     }
 
@@ -194,10 +195,10 @@ export default class DisplayComponent extends React.Component {
         return <div className="timer-controls">
             <a onClick={() => this.taskManager.togglePause()}>
                 <FontAwesome name={pauseGlyphName}/>
-            </a> &nbsp;
+            </a>
             <a onClick={() => this.taskManager.stop()}>
                 <FontAwesome name="step-forward"/>
-            </a> &nbsp;
+            </a>
             <a onClick={() => this.taskManager.finish()}>
                 <FontAwesome name="stop"/>
             </a>
@@ -220,9 +221,8 @@ export default class DisplayComponent extends React.Component {
     }
 
     render() {
-        return <div>
+        return <div className="container">
             {this.renderTimerDisplay()}
-            {this.renderTimerControls()}
             {this.renderTitle()}
             {this.renderNextTask()}
             {this.renderFinishedTasks()}

@@ -1,3 +1,6 @@
+import stop from '../resources/stop.wav';
+import tick from '../resources/tick.wav';
+
 export const ID_LENGTH = 10;
 
 export const customStyles = {
@@ -27,3 +30,8 @@ export const TICKS_PER_SEC = 50;
 
 export const LIMIT_SECONDS_THRESHOLD = 3;
 export const PLAY_AUDIO = true;
+
+export const AUDIO_MAP = {
+    'tick': new Audio(tick),
+    'stop': new Audio(stop),
+};

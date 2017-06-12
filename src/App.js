@@ -1,4 +1,6 @@
 import React from 'react';
+import WakeLock from 'react-wakelock';
+
 import './App.css'
 import TasksComponent from './TasksComponent';
 import DisplayComponent from './DisplayComponent';
@@ -28,17 +30,22 @@ class App extends React.Component {
     }
 
     render() {
+        let component = null;
         if (this.state.activeComponent === APP_STATE.CREATE_TASKS) {
-            return <TasksComponent
+            component = <TasksComponent
                 startCallback={this.changeActiveComponent}
                 nextState={APP_STATE.EXECUTE_TASKS}/>;
-        }
-        if (this.state.activeComponent === APP_STATE.EXECUTE_TASKS) {
-            return <DisplayComponent timersData={this.state.passedState}
+        } else if (this.state.activeComponent === APP_STATE.EXECUTE_TASKS) {
+            component = <DisplayComponent timersData={this.state.passedState}
                                      finishCallback={this.changeActiveComponent}
                                      nextState={APP_STATE.STATS}/>
+        } else {
+            component = <StatsComponent finishedTasks={this.state.passedState}/>
         }
-        return <StatsComponent finishedTasks={this.state.passedState}/>
+        return <div>
+            <WakeLock />
+            {component}
+        </div>
     }
 }
 

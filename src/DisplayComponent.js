@@ -8,14 +8,6 @@ import * as definitions from './definitions';
 
 import './DisplayComponent.css';
 
-import stop from '../resources/stop.wav';
-import tick from '../resources/tick.wav';
-
-const AUDIO_MAP = {
-    'tick': new Audio(tick),
-    'stop': new Audio(stop),
-};
-
 export default class DisplayComponent extends React.Component {
     constructor(props) {
         super(props);
@@ -73,7 +65,7 @@ export default class DisplayComponent extends React.Component {
 
     audioCallback(event) {
         if (definitions.PLAY_AUDIO) {
-            let audio = AUDIO_MAP[event];
+            let audio = definitions.AUDIO_MAP[event];
             audio.play()
         }
     }

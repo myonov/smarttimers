@@ -101,3 +101,15 @@ export function formatZeroPadSeconds(timeInSeconds) {
 
     return zeroPad(hours) + ':' + zeroPad(minutes) + ':' + zeroPad(seconds);
 }
+
+export function initAudio(audioMap) {
+    for (let key in audioMap) {
+        if (!audioMap.hasOwnProperty(key)) continue;
+        let audio = audioMap[key];
+        audio.volume = 0;
+        audio.addEventListener('ended', function () {
+            this.volume = 1;
+        });
+        audio.play();
+    }
+}

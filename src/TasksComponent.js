@@ -417,6 +417,8 @@ export default class TasksComponent extends React.Component {
 
     transferAction() {
         let data = utils.deepCopy(this.state.root);
+        // Mobile Chrome play audio only when the user interacts with the page
+        utils.initAudio(definitions.AUDIO_MAP);
         this.props.startCallback(this.props.nextState, data);
     }
 

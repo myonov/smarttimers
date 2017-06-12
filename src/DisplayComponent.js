@@ -165,11 +165,17 @@ export default class DisplayComponent extends React.Component {
     renderNextTask() {
         if (this.state.nextTask === null) {
             return <div className="next-task">
-                No next task
+                <h4>
+                    <FontAwesome name="arrow-circle-right" className="fa-2x next-task-glyph"/>
+                    <span className="vertical-aligned">End</span>
+                </h4>
             </div>
         }
         return <div className="next-task">
-            <h4>Next task: {this.state.nextTask.title}</h4>
+            <h4>
+                <FontAwesome name="arrow-circle-right" className="fa-2x next-task-glyph"/>
+                <span className="vertical-aligned">{this.state.nextTask.title}</span>
+            </h4>
             <div>
                 <div>
                     Type: {this.state.nextTask.type}

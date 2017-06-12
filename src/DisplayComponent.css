@@ -26,3 +26,16 @@
 .timer-controls a:hover {
     color: lightcoral;
 }
+
+.paused {
+    color: lightcoral;
+}
+
+.next-task-glyph {
+    color: lightcoral;
+    vertical-align: middle;
+}
+
+.vertical-aligned {
+    vertical-align: middle;
+}

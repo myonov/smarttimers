@@ -158,7 +158,27 @@ export default class DisplayComponent extends React.Component {
 
         return <div className={timerDisplayClasses.join(' ')}>
             <div className="time">{formatZeroPadSeconds(displayedSeconds)}</div>
+            {this.renderPassedOrRemainingTime()}
             {this.renderTimerControls()}
+        </div>
+    }
+
+    renderPassedOrRemainingTime() {
+        if (!this.state.paused) {
+            return null;
+        }
+        let icon = null,
+            seconds = null;
+        if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
+            icon = <FontAwesome name="hourglass-start" className="vertical-aligned"/>;
+            seconds = this.state.currentTask.timer - this.state.seconds;
+        } else {
+            icon = <FontAwesome name="clock-o" className="vertical-aligned"/>;
+            seconds = this.state.seconds;
+        }
+
+        return <div className="second-time">
+            {icon} <span className="vertical-aligned">{formatZeroPadSeconds(seconds)}</span>
         </div>
     }
 
@@ -166,14 +186,14 @@ export default class DisplayComponent extends React.Component {
         if (this.state.nextTask === null) {
             return <div className="next-task">
                 <h4>
-                    <FontAwesome name="arrow-circle-right" className="fa-2x next-task-glyph"/>
+                    <FontAwesome name="arrow-right" className="next-task-glyph"/>
                     <span className="vertical-aligned">End</span>
                 </h4>
             </div>
         }
         return <div className="next-task">
             <h4>
-                <FontAwesome name="arrow-circle-right" className="fa-2x next-task-glyph"/>
+                <FontAwesome name="arrow-right" className="next-task-glyph"/>
                 <span className="vertical-aligned">{this.state.nextTask.title}</span>
             </h4>
             <div>

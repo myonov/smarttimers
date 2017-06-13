@@ -1,25 +1,22 @@
 .timer-display {
     padding-bottom: 10px;
     border-bottom: 1px solid #bbb;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
 }
 
 .time {
     font-size: 3rem;
-    display: inline-block;
-    width: 100%;
-    text-align: center;
     margin-top: 10px;
     margin-bottom: 10px;
 }
 
 .timer-controls {
     font-size: 1.5rem;
-    display: inline-block;
-    width: 100%;
-    text-align: center;
 }
 
-.timer-controls a {
+.timer-controls a:not(:last-child) {
     margin-right: 20px;
 }
 
@@ -27,7 +24,7 @@
     color: lightcoral;
 }
 
-.paused {
+.paused > .time {
     color: lightcoral;
 }
 
@@ -38,4 +35,8 @@
 
 .vertical-aligned {
     vertical-align: middle;
+}
+
+.second-time {
+    margin-bottom: 10px;
 }

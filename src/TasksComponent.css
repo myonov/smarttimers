@@ -112,6 +112,7 @@ a {
 }
 
 .modal-content select {
+  width: 96%;
   border: 1px solid #bbb;
 }
 

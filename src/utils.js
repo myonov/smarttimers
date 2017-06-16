@@ -1,3 +1,7 @@
+import React from 'react';
+import FontAwesome from 'react-fontawesome';
+import * as definitions from './definitions';
+
 function ValidationException(message) {
     this.message = message;
     this.name = 'ValidationException';
@@ -112,4 +116,25 @@ export function initAudio(audioMap) {
         });
         audio.play();
     }
+}
+
+
+export function getIconByTaskType(taskType, classNames='') {
+    let icon = null;
+    if (taskType === definitions.TASK_CHOICES.TIMER) {
+        icon = <FontAwesome name="hourglass-start" className={classNames}/>;
+    } else {
+        icon = <FontAwesome name="clock-o" className={classNames}/>;
+    }
+    return icon;
+}
+
+export function getSecondsForDisplay(taskType, elapsed) {
+    let seconds = null;
+    if (taskType === definitions.TASK_CHOICES.TIMER) {
+        seconds = this.state.currentTask.timer - this.state.seconds;
+    } else {
+        seconds = this.state.seconds;
+    }
+    return seconds;
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import FontAwesome from 'react-fontawesome';
 
 import {TaskManager} from './TaskManager';
-import {deepCopy, formatZeroPadSeconds} from './utils';
+import {deepCopy, formatZeroPadSeconds, getIconByTaskType, formatTimeFromSeconds} from './utils';
 
 import * as definitions from './definitions';
 
@@ -21,7 +21,6 @@ export default class DisplayComponent extends React.Component {
         };
 
         this.taskManager = new TaskManager(props.timersData, timerCallbacks);
-        window.taskManager = this.taskManager;
 
         this.state = {
             currentTask: null,
@@ -128,23 +127,21 @@ export default class DisplayComponent extends React.Component {
         this.taskManager.unsubscribe('taskManager:togglePause', this.togglePauseHandler);
     }
 
-    renderTitle() {
-        let title;
-        if (!this.state.currentTask) {
-            title = 'No task started';
-        } else {
-            title = this.state.currentTask.title;
-        }
+    renderDescriptions() {
+        let title = this.state.currentTask.title;
 
         return <h3 className="task-title">
-            {title}
+            <span className="left-side">
+                {getIconByTaskType(this.state.currentTask.type, 'vertical-aligned')}
+                <span className="vertical-aligned">{title}</span>
+            </span>
+            <span className="right-side">
+                {this.renderNextTask()}
+            </span>
         </h3>
     }
 
     renderTimerDisplay() {
-        if (this.state.currentTask === null) {
-            return null;
-        }
         let displayedSeconds;
         let timerDisplayClasses = ['timer-display'];
         if (this.state.paused) {
@@ -163,48 +160,47 @@ export default class DisplayComponent extends React.Component {
         </div>
     }
 
+    getTimeForDisplay() {
+        let seconds = null;
+        if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
+            seconds = this.state.currentTask.timer - this.state.seconds;
+        } else {
+            seconds = this.state.seconds;
+        }
+        return seconds;
+    }
+
     renderPassedOrRemainingTime() {
         if (!this.state.paused) {
             return null;
         }
-        let icon = null,
-            seconds = null;
-        if (this.state.currentTask.type === definitions.TASK_CHOICES.TIMER) {
-            icon = <FontAwesome name="hourglass-start" className="vertical-aligned"/>;
-            seconds = this.state.currentTask.timer - this.state.seconds;
-        } else {
-            icon = <FontAwesome name="clock-o" className="vertical-aligned"/>;
-            seconds = this.state.seconds;
-        }
 
         return <div className="second-time">
-            {icon} <span className="vertical-aligned">{formatZeroPadSeconds(seconds)}</span>
+            {getIconByTaskType(this.state.currentTask.type, 'vertical-aligned')}
+            <span className="vertical-aligned">{formatZeroPadSeconds(this.getTimeForDisplay())}</span>
         </div>
     }
 
     renderNextTask() {
         if (this.state.nextTask === null) {
-            return <div className="next-task">
-                <h4>
-                    <FontAwesome name="arrow-right" className="next-task-glyph"/>
-                    <span className="vertical-aligned">End</span>
-                </h4>
-            </div>
-        }
-        return <div className="next-task">
-            <h4>
+            return <span className="next-task">
                 <FontAwesome name="arrow-right" className="next-task-glyph"/>
+                <span className="vertical-aligned">End</span>
+            </span>
+        }
+        let duration = null;
+        if (this.state.nextTask !== null &&
+            this.state.nextTask.type === definitions.TASK_CHOICES.TIMER) {
+            duration = <span className="vertical-aligned">
+                {formatTimeFromSeconds(this.state.nextTask.timer)}
+            </span>
+        }
+        return <span className="next-task">
+                <FontAwesome name="arrow-right" className="next-task-glyph"/>
+                {getIconByTaskType(this.state.nextTask.type, 'vertical-aligned')}
                 <span className="vertical-aligned">{this.state.nextTask.title}</span>
-            </h4>
-            <div>
-                <div>
-                    Type: {this.state.nextTask.type}
-                </div>
-                <div>
-                    Duration: {this.state.nextTask.timer ? this.state.nextTask.timer : '-'}
-                </div>
-            </div>
-        </div>
+                {duration}
+            </span>
     }
 
     renderTimerControls() {
@@ -239,10 +235,12 @@ export default class DisplayComponent extends React.Component {
     }
 
     render() {
+        if (this.state.currentTask === null) {
+            return null;
+        }
         return <div className="container">
             {this.renderTimerDisplay()}
-            {this.renderTitle()}
-            {this.renderNextTask()}
+            {this.renderDescriptions()}
             {this.renderFinishedTasks()}
         </div>
     }

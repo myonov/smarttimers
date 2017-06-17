@@ -119,7 +119,7 @@ export function initAudio(audioMap) {
 }
 
 
-export function getIconByTaskType(taskType, classNames='') {
+export function getIconByTaskType(taskType, classNames = '') {
     let icon = null;
     if (taskType === definitions.TASK_CHOICES.TIMER) {
         icon = <FontAwesome name="hourglass-start" className={classNames}/>;
@@ -137,4 +137,21 @@ export function getSecondsForDisplay(taskType, elapsed) {
         seconds = this.state.seconds;
     }
     return seconds;
+}
+
+export function renderFinishedTask(item) {
+    return <li className="finished-task">
+        <h4>
+            <span className="title">
+                {getIconByTaskType(item.task.type)}
+                {item.task.title}
+            </span>
+            <span className="running-time">
+                {item.timeStats.runningTime}
+            </span>
+            <span className="paused-time">
+                {item.timeStats.pausedTime}
+            </span>
+        </h4>
+    </li>
 }

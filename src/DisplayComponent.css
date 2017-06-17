@@ -52,3 +52,7 @@
 .next-task span {
     margin-left: 10px;
 }
+
+.finished-task span {
+    margin-right: 20px;
+}

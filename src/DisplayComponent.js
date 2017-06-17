@@ -2,7 +2,13 @@ import React from 'react';
 import FontAwesome from 'react-fontawesome';
 
 import {TaskManager} from './TaskManager';
-import {deepCopy, formatZeroPadSeconds, getIconByTaskType, formatTimeFromSeconds} from './utils';
+import {
+    deepCopy,
+    formatZeroPadSeconds,
+    getIconByTaskType,
+    formatTimeFromSeconds,
+    renderFinishedTask
+} from './utils';
 
 import * as definitions from './definitions';
 
@@ -177,7 +183,8 @@ export default class DisplayComponent extends React.Component {
 
         return <div className="second-time">
             {getIconByTaskType(this.state.currentTask.type, 'vertical-aligned')}
-            <span className="vertical-aligned">{formatZeroPadSeconds(this.getTimeForDisplay())}</span>
+            <span
+                className="vertical-aligned">{formatZeroPadSeconds(this.getTimeForDisplay())}</span>
         </div>
     }
 
@@ -197,9 +204,9 @@ export default class DisplayComponent extends React.Component {
         }
         return <span className="next-task">
                 <FontAwesome name="arrow-right" className="next-task-glyph"/>
-                {getIconByTaskType(this.state.nextTask.type, 'vertical-aligned')}
-                <span className="vertical-aligned">{this.state.nextTask.title}</span>
-                {duration}
+            {getIconByTaskType(this.state.nextTask.type, 'vertical-aligned')}
+            <span className="vertical-aligned">{this.state.nextTask.title}</span>
+            {duration}
             </span>
     }
 
@@ -220,16 +227,11 @@ export default class DisplayComponent extends React.Component {
     }
 
     renderFinishedTasks() {
+        let content = this.state.finishedTasks.map(renderFinishedTask);
+
         return <div className="finished-tasks">
             <ol>
-                {this.state.finishedTasks.map((item) => {
-                    return <li>
-                        Task name: {item.task.title}<br />
-                        Type: {item.task.type}<br />
-                        Running time: {item.timeStats.runningTime};
-                        Paused time: {item.timeStats.pausedTime}
-                    </li>
-                })}
+                {content}
             </ol>
         </div>
     }

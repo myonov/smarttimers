@@ -144,11 +144,6 @@ export default class DisplayComponent extends React.Component {
             <span className="right-side">
                 {this.renderNextTask()}
             </span>
-            <span className="remaining">
-                {this.state.currentTask.remainingTime}
-                <br/>
-                {this.state.currentTask.isRemainingTimeKnown}
-            </span>
         </h3>
     }
 
@@ -168,6 +163,17 @@ export default class DisplayComponent extends React.Component {
             <div className="time">{formatZeroPadSeconds(displayedSeconds)}</div>
             {this.renderPassedOrRemainingTime()}
             {this.renderTimerControls()}
+        </div>
+    }
+
+    renderProgress() {
+        let progress = this.taskManager.taskIterator.getTasksProgress();
+        if (progress === null) {
+            return null;
+        }
+        return <div className="progress">
+            <span className="percent">{progress.percent}%</span>
+            <span className="tasks">{progress.currentTaskIndex}/{progress.tasksCount}</span>
         </div>
     }
 
@@ -247,6 +253,7 @@ export default class DisplayComponent extends React.Component {
         }
         return <div className="container">
             {this.renderTimerDisplay()}
+            {this.renderProgress()}
             {this.renderDescriptions()}
             {this.renderFinishedTasks()}
         </div>

@@ -1,50 +1,45 @@
 import {TreeIterator} from './TreeIterator';
 import * as definitions from './definitions';
 
-const NodeHandler = {
-    get: (target, name) => {
-        if (name in target.task) {
-            return target.task[name];
-        }
-        if (name in target.cache) {
-            return target.cache[name];
-        }
-        if (name in target) {
-            return target[name];
-        }
-        return undefined;
-    },
-
-    set: (target, property, value, receiver) => {
-        target.cache[property] = value;
-        return true;
-    }
-};
-
-class _Node {
-    constructor(task) {
-        this.task = task;
-        this.cache = {};
+class Node {
+    constructor(node) {
+        this.node = node;
+        this.progress = {};
+        this.taskIndex = null;
+        this.remainingTime = null;
+        this.isRemainingTimeKnown = null;
     }
 
-    getTimeStats() {
-        // access these properties from a proxy object
-        if (this.type === definitions.TASK_CHOICES.TIMER) {
-            return {
-                remainingTime: this.timer,
-                isRemainingTimeKnown: true,
-            };
+    setProgressInfo(taskIndex, remainingTime, isRemainingTimeKnown) {
+        this.taskIndex = taskIndex;
+        this.remainingTime = remainingTime;
+        this.isRemainingTimeKnown = isRemainingTimeKnown;
+    }
+
+    getProgressInfo() {
+        if ([this.taskIndex, this.remainingTime, this.isRemainingTimeKnown].indexOf(null) !== -1) {
+            throw new Error('Invalid node state');
         }
         return {
-            remainingTime: 0,
-            isRemainingTimeKnown: false,
+            taskIndex: this.taskIndex,
+            remainingTime: this.remainingTime,
+            isRemainingTimeKnown: this.isRemainingTimeKnown,
         }
     }
 }
 
-const buildNode = (task) => {
-    return new Proxy(new _Node(task), NodeHandler);
-};
+function getTimeStats(node) {
+    if (node.type === definitions.TASK_CHOICES.TIMER) {
+        return {
+            remainingTime: node.timer,
+            isRemainingTimeKnown: true,
+        };
+    }
+    return {
+        remainingTime: 0,
+        isRemainingTimeKnown: false,
+    }
+}
 
 export class ArrayIterator {
     _buildList() {
@@ -53,32 +48,31 @@ export class ArrayIterator {
             if (next === null) {
                 break;
             }
-            this.nodes.push(buildNode(next));
+            this.nodes.push(new Node(next));
         }
     }
 
     _computeNode(currentIndex) {
-        let prevRemainingTime = null,
-            prevIsRemainingTimeKnown = null;
+        let nextNodeRemainingTime = null,
+            nextNodeIsRemainingTimeKnown = null;
 
         if (currentIndex === this.nodes.length - 1) {
-            prevRemainingTime = 0;
-            prevIsRemainingTimeKnown = true;
+            nextNodeRemainingTime = 0;
+            nextNodeIsRemainingTimeKnown = true;
         } else {
-            prevRemainingTime = this.nodes[currentIndex + 1].remainingTime;
-            prevIsRemainingTimeKnown = this.nodes[currentIndex + 1].isRemainingTimeKnown;
+            let nextNodeProgressInfo = this.nodes[currentIndex + 1].getProgressInfo();
+            nextNodeRemainingTime = nextNodeProgressInfo.remainingTime;
+            nextNodeIsRemainingTimeKnown = nextNodeProgressInfo.isRemainingTimeKnown;
         }
 
-        let {remainingTime, isRemainingTimeKnown} = this.nodes[currentIndex].getTimeStats();
-        this.nodes[currentIndex].remainingTime = remainingTime + prevRemainingTime;
-        this.nodes[currentIndex].isRemainingTimeKnown = isRemainingTimeKnown &&
-            prevIsRemainingTimeKnown;
+        let {remainingTime, isRemainingTimeKnown} = getTimeStats(this.nodes[currentIndex].node);
+        this.nodes[currentIndex].setProgressInfo(
+            currentIndex,
+            remainingTime + nextNodeRemainingTime,
+            isRemainingTimeKnown && nextNodeIsRemainingTimeKnown);
     }
 
     _computeTimeStats() {
-        if (this.nodes.length === 0) {
-            return;
-        }
         this._computeNode(this.nodes.length - 1);
         for (let i = this.nodes.length - 2; i >= 0; --i) {
             this._computeNode(i);
@@ -105,8 +99,33 @@ export class ArrayIterator {
             this.index++;
         }
         if (this.index < this.nodes.length) {
-            return this.nodes[this.index];
+            return this.nodes[this.index].node;
         }
         return null;
+    }
+
+    getTasksProgress() {
+        if (this.index === null || this.index >= this.nodes.length) {
+            return null;
+        }
+        let progressInfo = this.nodes[this.index].getProgressInfo();
+        let firstTaskInfo = this.nodes[0].getProgressInfo();
+        if (firstTaskInfo.remainingTime === 0) {
+            // there are no timer tasks in the task list
+            return {
+                percent: 100,
+                currentTaskIndex: this.index,
+                tasksCount: this.nodes.length,
+                isRemainingTimeKnown: progressInfo.isRemainingTimeKnown,
+            };
+        } else {
+            return {
+                percent: parseInt((firstTaskInfo.remainingTime - progressInfo.remainingTime)
+                    / firstTaskInfo.remainingTime * 100, 10),
+                currentTaskIndex: this.index,
+                tasksCount: this.nodes.length,
+                isRemainingTimeKnown: progressInfo.isRemainingTimeKnown,
+            };
+        }
     }
 }

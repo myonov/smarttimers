@@ -1,6 +1,7 @@
 import {TreeIterator} from './TreeIterator';
+import * as definitions from './definitions';
 
-NodeHandler = {
+const NodeHandler = {
     get: (target, name) => {
         if (name in target.task) {
             return target.task[name];
@@ -8,13 +9,13 @@ NodeHandler = {
         if (name in target.cache) {
             return target.cache[name];
         }
+        if (name in target) {
+            return target[name];
+        }
         return undefined;
     },
 
     set: (target, property, value, receiver) => {
-        if (property in target.task) {
-            target.task[property] = value;
-        }
         target.cache[property] = value;
         return true;
     }
@@ -25,6 +26,20 @@ class _Node {
         this.task = task;
         this.cache = {};
     }
+
+    getTimeStats() {
+        // access these properties from a proxy object
+        if (this.type === definitions.TASK_CHOICES.TIMER) {
+            return {
+                remainingTime: this.timer,
+                isRemainingTimeKnown: true,
+            };
+        }
+        return {
+            remainingTime: 0,
+            isRemainingTimeKnown: false,
+        }
+    }
 }
 
 const buildNode = (task) => {
@@ -32,7 +47,7 @@ const buildNode = (task) => {
 };
 
 export class ArrayIterator {
-    _initIterator() {
+    _buildList() {
         while (true) {
             let next = this.treeIterator.next();
             if (next === null) {
@@ -42,9 +57,42 @@ export class ArrayIterator {
         }
     }
 
+    _computeNode(currentIndex) {
+        let prevRemainingTime = null,
+            prevIsRemainingTimeKnown = null;
+
+        if (currentIndex === this.nodes.length - 1) {
+            prevRemainingTime = 0;
+            prevIsRemainingTimeKnown = true;
+        } else {
+            prevRemainingTime = this.nodes[currentIndex + 1].remainingTime;
+            prevIsRemainingTimeKnown = this.nodes[currentIndex + 1].isRemainingTimeKnown;
+        }
+
+        let {remainingTime, isRemainingTimeKnown} = this.nodes[currentIndex].getTimeStats();
+        this.nodes[currentIndex].remainingTime = remainingTime + prevRemainingTime;
+        this.nodes[currentIndex].isRemainingTimeKnown = isRemainingTimeKnown &&
+            prevIsRemainingTimeKnown;
+    }
+
+    _computeTimeStats() {
+        if (this.nodes.length === 0) {
+            return;
+        }
+        this._computeNode(this.nodes.length - 1);
+        for (let i = this.nodes.length - 2; i >= 0; --i) {
+            this._computeNode(i);
+        }
+    }
+
+    _initIterator() {
+        this._buildList();
+        this._computeTimeStats();
+    }
+
     constructor(root) {
         this.root = root;
-        this.treeIterator = TreeIterator(root);
+        this.treeIterator = new TreeIterator(root);
         this.nodes = [];
         this.index = null;
         this._initIterator();

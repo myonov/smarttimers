@@ -144,6 +144,11 @@ export default class DisplayComponent extends React.Component {
             <span className="right-side">
                 {this.renderNextTask()}
             </span>
+            <span className="remaining">
+                {this.state.currentTask.remainingTime}
+                <br/>
+                {this.state.currentTask.isRemainingTimeKnown}
+            </span>
         </h3>
     }
 

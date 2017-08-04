@@ -1,5 +1,5 @@
 .timer-display {
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     border-bottom: 1px solid #bbb;
     display: inline-block;
     width: 100%;
@@ -41,8 +41,16 @@
     margin-bottom: 10px;
 }
 
+.current-task-description {
+    font-size: 1.5rem;
+}
+
 .right-side {
     float: right;
+}
+
+.progress {
+    font-size: 1.25rem;
 }
 
 .progress span {
@@ -54,10 +62,39 @@
     clear: both;
 }
 
+.task-title {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #bbb;;
+}
+
 .next-task span {
     margin-left: 10px;
 }
 
 .finished-task span {
     margin-right: 20px;
+}
+
+@media (max-width: 800px) {
+    .left-side {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .progress {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .progress > .percent {
+        margin-left: 0;
+    }
+
+    .right-side {
+        display: block;
+        float: none;
+        text-align: center;
+    }
 }

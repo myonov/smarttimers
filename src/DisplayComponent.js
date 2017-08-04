@@ -138,7 +138,7 @@ export default class DisplayComponent extends React.Component {
         let title = this.state.currentTask.title;
 
         return <h3 className="task-title">
-            <span className="left-side">
+            <span className="left-side current-task-description">
                 {getIconByTaskType(this.state.currentTask.type, 'vertical-aligned')}
                 <span className="vertical-aligned">{title}</span>
             </span>

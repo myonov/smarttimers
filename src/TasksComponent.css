@@ -33,6 +33,8 @@
 
 .info-container {
   display: inline-block;
+  max-width: 80%;
+  vertical-align: top;
 }
 
 .component .info-container:hover {
@@ -142,6 +144,8 @@ a {
   width: 30px;
   text-align: center;
   touch-action: none;
+  vertical-align: top;
+  padding-top: 10px;
 }
 
 @media (max-width: 800px) {

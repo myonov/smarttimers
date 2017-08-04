@@ -142,6 +142,9 @@ export default class DisplayComponent extends React.Component {
                 {getIconByTaskType(this.state.currentTask.type, 'vertical-aligned')}
                 <span className="vertical-aligned">{title}</span>
             </span>
+            <span>
+                {this.renderProgress()}
+            </span>
             <span className="right-side">
                 {this.renderNextTask()}
             </span>
@@ -171,12 +174,12 @@ export default class DisplayComponent extends React.Component {
         if (this.state.progressInfo === null) {
             return null;
         }
-        return <div className="progress">
+        return <span className="progress">
             <span className="percent">{this.state.progressInfo.percent}%</span>
             <span className="tasks">
                 {this.state.progressInfo.currentTaskIndex}/{this.state.progressInfo.tasksCount}
             </span>
-        </div>
+        </span>
     }
 
     getTimeForDisplay() {
@@ -255,7 +258,6 @@ export default class DisplayComponent extends React.Component {
         }
         return <div className="container">
             {this.renderTimerDisplay()}
-            {this.renderProgress()}
             {this.renderDescriptions()}
             {this.renderFinishedTasks()}
         </div>

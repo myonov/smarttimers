@@ -45,6 +45,11 @@
     float: right;
 }
 
+.progress span {
+    display: inline-block;
+    margin-left: 30px;
+}
+
 .right-side:after {
     clear: both;
 }

@@ -73,7 +73,7 @@ export class TreeIterator {
 
     ascend(v) {
         if (v === null) {
-            // root's parent; no more non-finished nodes
+            // root's parent; no more unfinished nodes
             return null;
         }
         if (this.isLeafNode(v)) {
@@ -95,7 +95,7 @@ export class TreeIterator {
         } else {
             let firstNonFinishedNode = this.ascend(this.lastLeafNode);
             if (firstNonFinishedNode === null) {
-                return null; // no more non-finished nodes
+                return null; // no more unfinished nodes
             }
             this.lastLeafNode = this.descend(firstNonFinishedNode);
             return this.lastLeafNode;

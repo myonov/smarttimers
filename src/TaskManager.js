@@ -1,5 +1,5 @@
 import {EventEmitter} from './EventEmitter';
-import {TreeIterator} from './TreeIterator';
+import {ArrayIterator} from './ArrayIterator';
 import {Timer} from './Timer';
 
 import * as definitions from './definitions';
@@ -15,7 +15,7 @@ export class TaskManager extends EventEmitter {
     constructor(timersData, timerCallbacks) {
         super();
         this.timersData = timersData;
-        this.treeIterator = new TreeIterator(timersData);
+        this.taskIterator = new ArrayIterator(timersData);
         this.currentTask = null;
         this.currentTaskTimer = null;
         this.nextTask = null;
@@ -61,7 +61,8 @@ export class TaskManager extends EventEmitter {
     }
 
     startTaskCallback() {
-        this.fire('taskManager:startTask', this.currentTask, this.nextTask);
+        this.fire('taskManager:startTask',
+            this.currentTask, this.nextTask, this.progressInfo);
     }
 
     stopTaskCallback(taskDuration) {
@@ -72,18 +73,20 @@ export class TaskManager extends EventEmitter {
         }
 
         this.currentTask = this.nextTask;
-        this.nextTask = this.treeIterator.next();
+        this.progressInfo = this.taskIterator.getTasksProgress();
+        this.nextTask = this.taskIterator.next();
 
         this.assignAndStartTimer();
     }
 
     start() {
         this.fire('taskManager:start');
-        this.currentTask = this.treeIterator.next();
+        this.currentTask = this.taskIterator.next();
+        this.progressInfo = this.taskIterator.getTasksProgress();
         if (this.currentTask === null) {
             this.fire('taskManager:stop');
         }
-        this.nextTask = this.treeIterator.next();
+        this.nextTask = this.taskIterator.next();
 
         this.assignAndStartTimer();
     }

@@ -61,7 +61,8 @@ export class TaskManager extends EventEmitter {
     }
 
     startTaskCallback() {
-        this.fire('taskManager:startTask', this.currentTask, this.nextTask);
+        this.fire('taskManager:startTask',
+            this.currentTask, this.nextTask, this.progressInfo);
     }
 
     stopTaskCallback(taskDuration) {
@@ -72,6 +73,7 @@ export class TaskManager extends EventEmitter {
         }
 
         this.currentTask = this.nextTask;
+        this.progressInfo = this.taskIterator.getTasksProgress();
         this.nextTask = this.taskIterator.next();
 
         this.assignAndStartTimer();
@@ -80,6 +82,7 @@ export class TaskManager extends EventEmitter {
     start() {
         this.fire('taskManager:start');
         this.currentTask = this.taskIterator.next();
+        this.progressInfo = this.taskIterator.getTasksProgress();
         if (this.currentTask === null) {
             this.fire('taskManager:stop');
         }

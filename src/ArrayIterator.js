@@ -110,22 +110,21 @@ export class ArrayIterator {
         }
         let progressInfo = this.nodes[this.index].getProgressInfo();
         let firstTaskInfo = this.nodes[0].getProgressInfo();
+        let commonInfo = {
+            currentTaskIndex: this.index + 1,
+            tasksCount: this.nodes.length,
+            isRemainingTimeKnown: progressInfo.isRemainingTimeKnown,
+        };
         if (firstTaskInfo.remainingTime === 0) {
             // there are no timer tasks in the task list
-            return {
+            return Object.assign(commonInfo, {
                 percent: 100,
-                currentTaskIndex: this.index,
-                tasksCount: this.nodes.length,
-                isRemainingTimeKnown: progressInfo.isRemainingTimeKnown,
-            };
+            });
         } else {
-            return {
+            return Object.assign(commonInfo, {
                 percent: parseInt((firstTaskInfo.remainingTime - progressInfo.remainingTime)
                     / firstTaskInfo.remainingTime * 100, 10),
-                currentTaskIndex: this.index,
-                tasksCount: this.nodes.length,
-                isRemainingTimeKnown: progressInfo.isRemainingTimeKnown,
-            };
+            });
         }
     }
 }

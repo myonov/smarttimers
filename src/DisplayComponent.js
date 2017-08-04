@@ -47,12 +47,13 @@ export default class DisplayComponent extends React.Component {
         this.togglePauseHandler = this.togglePauseHandler.bind(this);
     }
 
-    startTaskHandler(currentTask, nextTask) {
+    startTaskHandler(currentTask, nextTask, progressInfo) {
         this.setState({
             seconds: 0,
             pauseSeconds: 0,
             currentTask: currentTask,
             nextTask: nextTask,
+            progressInfo: progressInfo,
             paused: false,
         }, () => {
             if (this.checkLimitThreshold()) {
@@ -167,13 +168,14 @@ export default class DisplayComponent extends React.Component {
     }
 
     renderProgress() {
-        let progress = this.taskManager.taskIterator.getTasksProgress();
-        if (progress === null) {
+        if (this.state.progressInfo === null) {
             return null;
         }
         return <div className="progress">
-            <span className="percent">{progress.percent}%</span>
-            <span className="tasks">{progress.currentTaskIndex}/{progress.tasksCount}</span>
+            <span className="percent">{this.state.progressInfo.percent}%</span>
+            <span className="tasks">
+                {this.state.progressInfo.currentTaskIndex}/{this.state.progressInfo.tasksCount}
+            </span>
         </div>
     }
 

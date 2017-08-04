@@ -92,12 +92,12 @@ export class TaskManager extends EventEmitter {
     }
 
     stop() {
-        // this method stops the current task
+        // stops the current task
         this.currentTaskTimer.stop();
     }
 
     finish() {
-        // this method finishes the TaskManager immediately
+        // finishes the TaskManager immediately
         this.isFinished = true;
         this.currentTaskTimer.stop();
     }

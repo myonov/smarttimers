@@ -29,7 +29,6 @@
 }
 
 .next-task-glyph {
-    color: lightcoral;
     vertical-align: middle;
 }
 
@@ -51,6 +50,7 @@
 
 .progress {
     font-size: 1.25rem;
+    color: lightcoral;
 }
 
 .progress span {
@@ -69,10 +69,6 @@
 
 .next-task span {
     margin-left: 10px;
-}
-
-.finished-task span {
-    margin-right: 20px;
 }
 
 @media (max-width: 800px) {

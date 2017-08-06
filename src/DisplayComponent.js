@@ -4,10 +4,10 @@ import FontAwesome from 'react-fontawesome';
 import {TaskManager} from './TaskManager';
 import {
     deepCopy,
+    formatTimeFromSeconds,
     formatZeroPadSeconds,
     getIconByTaskType,
-    formatTimeFromSeconds,
-    renderFinishedTask
+    renderFinishedTasks,
 } from './utils';
 
 import * as definitions from './definitions';
@@ -175,7 +175,10 @@ export default class DisplayComponent extends React.Component {
             return null;
         }
         return <span className="progress">
-            <span className="percent">{this.state.progressInfo.percent}%</span>
+            <span className="percent">
+                {this.state.progressInfo.isRemainingTimeKnown ? '' : '\u2264'}
+                {this.state.progressInfo.percent}%
+            </span>
             <span className="tasks">
                 {this.state.progressInfo.currentTaskIndex}/{this.state.progressInfo.tasksCount}
             </span>
@@ -243,13 +246,7 @@ export default class DisplayComponent extends React.Component {
     }
 
     renderFinishedTasks() {
-        let content = this.state.finishedTasks.map(renderFinishedTask);
-
-        return <div className="finished-tasks">
-            <ol>
-                {content}
-            </ol>
-        </div>
+        return renderFinishedTasks(this.state.finishedTasks);
     }
 
     render() {

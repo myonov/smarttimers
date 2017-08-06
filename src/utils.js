@@ -141,17 +141,29 @@ export function getSecondsForDisplay(taskType, elapsed) {
 
 export function renderFinishedTask(item) {
     return <li className="finished-task">
-        <h4>
-            <span className="title">
-                {getIconByTaskType(item.task.type)}
-                {item.task.title}
-            </span>
+        <span className="title">
+            {getIconByTaskType(item.task.type)}
+            {item.task.title}
+        </span>
+        <span className="time-group">
             <span className="running-time">
-                {item.timeStats.runningTime}
+                <FontAwesome name="play"/>
+                {formatTimeFromSeconds(item.timeStats.runningTime)}
             </span>
             <span className="paused-time">
-                {item.timeStats.pausedTime}
+                <FontAwesome name="pause"/>
+                {formatTimeFromSeconds(item.timeStats.pausedTime)}
             </span>
-        </h4>
+        </span>
     </li>
+}
+
+export function renderFinishedTasks(finishedTasks) {
+    let content = finishedTasks.map(renderFinishedTask);
+
+    return <div className="finished-tasks">
+        <ol reversed={'reversed'}>
+            {content}
+        </ol>
+    </div>
 }

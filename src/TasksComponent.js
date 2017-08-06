@@ -105,7 +105,7 @@ function TimerComponent(props) {
     return (
         <div className="component timer-component" data-task-id={task.id}>
             <div className="sortable-handle-container">
-                <FontAwesome name="plus-square-o" className="sortable-handle"/>
+                <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
                 <div className="info">
@@ -126,7 +126,7 @@ function StopwatchComponent(props) {
     return (
         <div className="component stopwatch-component" data-task-id={task.id}>
             <div className="sortable-handle-container">
-                <FontAwesome name="plus-square-o" className="sortable-handle"/>
+                <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
                 <div className="info">
@@ -147,7 +147,7 @@ function RepeatComponent(props) {
         <div className="component repeat-component"
              data-task-id={task.id}>
             <div className="sortable-handle-container">
-                <FontAwesome name="plus-square-o" className="sortable-handle"/>
+                <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
                 <div className="info">

@@ -89,18 +89,18 @@ class TaskList extends React.Component {
 }
 
 function TaskDescription(props) {
-    let {callbacks, taskListNode, task} = props;
+    let {task} = props;
     return (
         <span className="title">
-            <a onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
+            <span>
                 {task.title}
-            </a>
+            </span>
         </span>
     );
 }
 
 function TimerComponent(props) {
-    let {task, taskDescription} = props;
+    let {task, taskDescription, callbacks, taskListNode} = props;
 
     return (
         <div className="component timer-component" data-task-id={task.id}>
@@ -108,7 +108,8 @@ function TimerComponent(props) {
                 <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
-                <div className="info">
+                <div className="info"
+                     onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                     {taskDescription}
                     <span className="duration">
                         <FontAwesome name="hourglass-start"/>
@@ -121,7 +122,7 @@ function TimerComponent(props) {
 }
 
 function StopwatchComponent(props) {
-    let {task, taskDescription} = props;
+    let {task, taskDescription, callbacks, taskListNode} = props;
 
     return (
         <div className="component stopwatch-component" data-task-id={task.id}>
@@ -129,7 +130,8 @@ function StopwatchComponent(props) {
                 <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
-                <div className="info">
+                <div className="info"
+                     onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                     {taskDescription}
                     <span className="stopwatch">
                         <FontAwesome name="clock-o"/>
@@ -141,7 +143,7 @@ function StopwatchComponent(props) {
 }
 
 function RepeatComponent(props) {
-    let {task, taskDescription, callbacks} = props;
+    let {task, taskDescription, callbacks, taskListNode} = props;
 
     return (
         <div className="component repeat-component"
@@ -150,7 +152,8 @@ function RepeatComponent(props) {
                 <FontAwesome name="bars" className="sortable-handle"/>
             </div>
             <div className="info-container">
-                <div className="info">
+                <div className="info"
+                     onClick={() => callbacks.openEditModal(taskListNode, task.id)}>
                     {taskDescription}
                     <span className="repeat">
                         <FontAwesome name="repeat"/> {task.repeat}
@@ -168,14 +171,14 @@ function RepeatComponent(props) {
 function TaskComponent(props) {
     let {task, taskListNode, callbacks} = props;
     let taskDescription = <TaskDescription
-        task={task}
-        taskListNode={taskListNode}
-        callbacks={callbacks}/>;
+        task={task}/>;
 
     let Component;
     let componentProperties = {
         task: task,
         taskDescription: taskDescription,
+        taskListNode: taskListNode,
+        callbacks: callbacks,
     };
 
     if (task.type === definitions.TASK_CHOICES.TIMER) {
@@ -184,7 +187,6 @@ function TaskComponent(props) {
         Component = StopwatchComponent;
     } else {
         Component = RepeatComponent;
-        componentProperties.callbacks = callbacks;
     }
 
     return <Component {...componentProperties}/>

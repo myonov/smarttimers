@@ -50,6 +50,7 @@
     top: 18%;
     width: 100%;
     padding: 10px 1rem 10px 1rem;
+    cursor: pointer;
 }
 
 .remove-task {

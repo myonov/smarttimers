@@ -37,13 +37,15 @@ class App extends React.Component {
                 nextState={APP_STATE.EXECUTE_TASKS}/>;
         } else if (this.state.activeComponent === APP_STATE.EXECUTE_TASKS) {
             component = <DisplayComponent timersData={this.state.passedState}
-                                     finishCallback={this.changeActiveComponent}
-                                     nextState={APP_STATE.STATS}/>
+                                          finishCallback={this.changeActiveComponent}
+                                          nextState={APP_STATE.STATS}/>
         } else {
-            component = <StatsComponent finishedTasks={this.state.passedState}/>
+            component = <StatsComponent finishedTasks={this.state.passedState}
+                                        finishCallback={this.changeActiveComponent}
+                                        nextState={APP_STATE.CREATE_TASKS}/>
         }
         return <div>
-            <WakeLock />
+            <WakeLock/>
             {component}
         </div>
     }

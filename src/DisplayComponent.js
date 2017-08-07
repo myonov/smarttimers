@@ -28,6 +28,7 @@ export default class DisplayComponent extends React.Component {
 
         this.taskManager = new TaskManager(props.timersData, timerCallbacks);
 
+        this._finishedTasks = [];
         this.state = {
             currentTask: null,
             nextTask: null,

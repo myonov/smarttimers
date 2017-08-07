@@ -1,6 +1,49 @@
+import {deepCopy} from './utils';
+import * as definitions from './definitions';
+
+function markEmptyRepeats(node) {
+    if (node.taskList && node.taskList.length === 0) {
+        node.markedForPruning = true;
+    }
+    for (let childNode of node.taskList) {
+        if (childNode.type === definitions.TASK_CHOICES.REPEAT) {
+            markEmptyRepeats(childNode);
+        }
+    }
+    let allChildNodeAreMarked = true;
+    for (let childNode of node.taskList) {
+        if (childNode.markedForPruning === undefined) {
+            allChildNodeAreMarked = false;
+        }
+    }
+    if (allChildNodeAreMarked) {
+        node.markedForPruning = true;
+    }
+}
+
+function pruneEmptyRepeatBranches(node) {
+    for (let i = node.taskList.length - 1; i >= 0; --i) {
+        let childNode = node.taskList[i];
+        if (childNode.markedForPruning) {
+            node.taskList.splice(i, 1)
+        }
+        if (childNode.type === definitions.TASK_CHOICES.REPEAT) {
+            pruneEmptyRepeatBranches(childNode);
+        }
+    }
+}
+
+function pruneTree(root) {
+    markEmptyRepeats(root);
+    pruneEmptyRepeatBranches(root);
+}
+
 export class TreeIterator {
     constructor(root) {
-        this.root = root;
+        let _root = deepCopy(root);
+        pruneTree(_root);
+
+        this.root = _root;
         this.parent = {};
         this.currentChildIndex = {};
         this.loopCounts = {};

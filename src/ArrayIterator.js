@@ -80,7 +80,9 @@ export class ArrayIterator {
 
     _initIterator() {
         this._buildList();
-        this._computeTimeStats();
+        if (this.nodes.length > 0) {
+            this._computeTimeStats();
+        }
     }
 
     constructor(root) {

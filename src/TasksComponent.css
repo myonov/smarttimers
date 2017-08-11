@@ -86,6 +86,10 @@ a {
     margin-bottom: 10px;
 }
 
+.total-time {
+    margin-top: 10px;
+}
+
 .modal-content {
     font-family: Helvetica, sans-serif;
     letter-spacing: 0.1em;

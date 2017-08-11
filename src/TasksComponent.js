@@ -7,6 +7,8 @@ import * as utils from './utils'
 import * as definitions from './definitions'
 
 import './TasksComponent.css';
+import {ArrayIterator} from './ArrayIterator';
+import {formatTimeFromSeconds} from './utils';
 
 function findTaskList(workNode, node) {
     let taskList = workNode.taskList;
@@ -476,6 +478,21 @@ export default class TasksComponent extends React.Component {
         );
     }
 
+    renderTotalTime() {
+        let {totalTime, isTotalTimeKnown} = ArrayIterator.getTotalTime(this.state.root);
+        if (totalTime === 0) {
+            return null;
+        }
+        return (
+            <div className="total-time">
+                <span>
+                    {isTotalTimeKnown ? '' : '\u2265'}
+                    {formatTimeFromSeconds(totalTime)}
+                </span>
+            </div>
+        );
+    }
+
     renderStartButton() {
         if (this.state.root.taskList.length === 0) {
             return null;
@@ -485,6 +502,7 @@ export default class TasksComponent extends React.Component {
                 <a className="button" onClick={this.transferAction}>
                     <FontAwesome name="play"/>Start
                 </a>
+                {this.renderTotalTime()}
             </div>
         );
     }

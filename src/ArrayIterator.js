@@ -129,3 +129,17 @@ export class ArrayIterator {
         }
     }
 }
+
+ArrayIterator.getTotalTime = (tree) => {
+    let iterator = new ArrayIterator(tree);
+    if (iterator.nodes.length === 0) {
+        return {
+            totalTime: 0,
+            isTotalTimeKnown: true,
+        };
+    }
+    return {
+        totalTime: iterator.nodes[0].remainingTime,
+        isTotalTimeKnown: iterator.nodes[0].isRemainingTimeKnown,
+    };
+};

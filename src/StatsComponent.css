@@ -7,3 +7,8 @@
 .underlined {
     text-decoration: underline;
 }
+
+.finished-tasks-header > span {
+    display: inline-block;
+    margin-right: 30px;
+}

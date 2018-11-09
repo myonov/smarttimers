@@ -153,6 +153,10 @@ a {
     padding-top: 10px;
 }
 
+.sortable-handle {
+    cursor: pointer;
+}
+
 @media (max-width: 800px) {
     .container {
         width: 100%;

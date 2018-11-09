@@ -10,3 +10,5 @@ the `build/` folder.
 * It has mobile layout and your phone would not sleep during the time tasks.
 
 * Timers would not be throttled if you switch the active tab.
+
+You can try it here: [https://myonov.github.io/smarttimers_build/](https://myonov.github.io/smarttimers_build/)

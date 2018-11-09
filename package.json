@@ -1,5 +1,6 @@
 {
   "name": "smarttimers",
+  "homepage": "https://myonov.github.io/smarttimers_build",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
